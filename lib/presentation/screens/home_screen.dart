@@ -49,23 +49,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final proceed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF171427),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
         title: const Row(
           children: [
-            Icon(Icons.share_rounded, color: Colors.blue, size: 24),
+            Icon(Icons.share_rounded, color: Color(0xFFA78BFA), size: 24),
             SizedBox(width: 8),
-            Text('Export & Share'),
+            Text('Export & Share', style: TextStyle(color: Colors.white)),
           ],
         ),
         content: Text(
           'Export "${category.name}" credentials (${credentials.length} accounts) to an Excel file and share?',
-          style: const TextStyle(height: 1.4),
+          style: const TextStyle(height: 1.4, color: Color(0xFFC4BED9)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFFB4ACCE))),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF7C3AED)),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Share Now'),
           ),
@@ -99,15 +105,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Account'),
-        content: Text('Are you sure you want to delete the account "${cred.email}"?'),
+        backgroundColor: const Color(0xFF171427),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        title: const Text('Delete Account', style: TextStyle(color: Colors.white)),
+        content: Text(
+          'Are you sure you want to delete the account "${cred.email}"?',
+          style: const TextStyle(color: Color(0xFFC4BED9)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFFB4ACCE))),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade600),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Delete'),
           ),
@@ -165,7 +179,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF5E3A).withOpacity(0.35),
+                    color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
                     blurRadius: 10,
                   ),
                 ],
@@ -285,7 +299,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   gradient: GlassColors.primaryGradient,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: const Color(0xFFFF5E3A).withOpacity(0.3),
+                                      color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
                                       blurRadius: 16,
                                     ),
                                   ],
@@ -391,7 +405,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           gradient: GlassColors.primaryGradient,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF5E3A).withOpacity(0.4),
+              color: const Color(0xFF7C3AED).withValues(alpha: 0.45),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),

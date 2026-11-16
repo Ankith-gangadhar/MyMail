@@ -33,8 +33,8 @@ class _VaultSearchBarState extends ConsumerState<VaultSearchBar> {
         borderRadius: 18,
         blur: 16,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-        backgroundColor: Colors.white.withOpacity(0.08),
-        borderColor: Colors.white.withOpacity(0.18),
+        backgroundColor: const Color(0xFF161327).withValues(alpha: 0.85),
+        borderColor: Colors.white.withValues(alpha: 0.08),
         child: TextField(
           controller: _controller,
           style: const TextStyle(color: Colors.white, fontSize: 14),
@@ -44,14 +44,14 @@ class _VaultSearchBarState extends ConsumerState<VaultSearchBar> {
           },
           decoration: InputDecoration(
             hintText: 'Search by email or label...',
-            hintStyle: TextStyle(
+            hintStyle: const TextStyle(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.45),
+              color: Color(0xFF7E7693),
             ),
-            prefixIcon: Icon(
-              Icons.search,
+            prefixIcon: const Icon(
+              Icons.search_rounded,
               size: 20,
-              color: Colors.white.withOpacity(0.7),
+              color: Color(0xFFA78BFA),
             ),
             suffixIcon: _controller.text.isNotEmpty
                 ? IconButton(

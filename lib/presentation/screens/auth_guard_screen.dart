@@ -411,7 +411,7 @@ class _VaultLockedViewState extends ConsumerState<_VaultLockedView> {
                       gradient: GlassColors.primaryGradient,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF5E3A).withOpacity(0.45),
+                          color: const Color(0xFF7C3AED).withValues(alpha: 0.45),
                           blurRadius: 28,
                           offset: const Offset(0, 8),
                         ),
@@ -476,7 +476,7 @@ class _VaultLockedViewState extends ConsumerState<_VaultLockedView> {
                       height: 24,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
-                        color: Color(0xFFFF7A00),
+                        color: Color(0xFF7C3AED),
                       ),
                     )
                   else

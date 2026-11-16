@@ -288,120 +288,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _startChangePassphraseFlow() async {
-    final p1Controller = TextEditingController();
-    final p2Controller = TextEditingController();
-    bool obscure = true;
 
-    final newPassphrase = await showDialog<String>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setLocalState) => AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.password_rounded, color: Colors.blue),
-              SizedBox(width: 8),
-              Text('Change Passphrase'),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'On this unlocked device, biometric verification is used instead of your old passphrase.\n\nEnter your new vault passphrase below:',
-                  style: TextStyle(fontSize: 13, height: 1.4),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: p1Controller,
-                  obscureText: obscure,
-                  decoration: InputDecoration(
-                    labelText: 'New Passphrase *',
-                    suffixIcon: IconButton(
-                      icon: Icon(obscure ? Icons.visibility : Icons.visibility_off),
-                      onPressed: () => setLocalState(() => obscure = !obscure),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: p2Controller,
-                  obscureText: obscure,
-                  decoration: const InputDecoration(
-                    labelText: 'Confirm New Passphrase *',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(null),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final p1 = p1Controller.text;
-                final p2 = p2Controller.text;
-                if (p1.isEmpty) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(content: Text('Please enter a new passphrase')),
-                  );
-                  return;
-                }
-                if (p1 != p2) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    const SnackBar(content: Text('Passphrases do not match')),
-                  );
-                  return;
-                }
-                Navigator.of(ctx).pop(p1);
-              },
-              child: const Text('Update Passphrase'),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (newPassphrase == null || !mounted) return;
-
-    try {
-      final success = await ref
-          .read(authNotifierProvider.notifier)
-          .changePassphrase(newPassphrase);
-
-      if (!mounted) return;
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Passphrase updated successfully! Vault key re-wrapped with Argon2id.'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Biometric authentication failed. Passphrase was not changed.'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error updating passphrase: $e'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
 
   Future<void> _downloadOfflineRecoveryKey() async {
     try {
@@ -516,16 +403,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             : ListView(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 children: [
-                  // Security Section
+                  // Google Account Section
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     child: Text(
-                      'SECURITY & RECOVERY',
+                      'GOOGLE ACCOUNT & SYNC',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -537,39 +424,86 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       child: Column(
                         children: [
                           ListTile(
-                            leading: const Icon(Icons.password_rounded, color: Colors.white70),
-                            title: const Text('Change Passphrase', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text('Biometric auth only • No old passphrase required', style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 12)),
-                            trailing: const Icon(Icons.chevron_right, color: Colors.white54),
-                            onTap: _startChangePassphraseFlow,
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: GlassColors.primaryGradient,
+                              ),
+                              child: const Icon(Icons.account_circle, color: Colors.white, size: 22),
+                            ),
+                            title: const Text('Google Sign-In', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                            subtitle: Text('Sign in with your Google account to sync & backup', style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 12)),
+                            trailing: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFF8B5CF6)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              ),
+                              onPressed: () async {
+                                final recovery = ref.read(recoveryServiceProvider);
+                                try {
+                                  await recovery.signInWithGoogle();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Signed in with Google successfully'),
+                                        backgroundColor: Color(0xFF7C3AED),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Google Sign-In: $e'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                              child: const Text('Connect', style: TextStyle(color: Color(0xFFA78BFA), fontWeight: FontWeight.bold)),
+                            ),
                           ),
-                          Divider(height: 1, color: Colors.white.withOpacity(0.12)),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Security Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Text(
+                      'SECURITY & PREFERENCES',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: GlassContainer(
+                      borderRadius: 20,
+                      padding: EdgeInsets.zero,
+                      child: Column(
+                        children: [
                           SwitchListTile(
-                            secondary: const Icon(Icons.mark_email_read_outlined, color: Colors.white70),
-                            title: const Text('Allow email recovery', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text('Cloud KMS-backed 6-digit code recovery via Google email', style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 12)),
-                            value: authState.isEmailRecoveryEnabled,
-                            activeColor: const Color(0xFFFF007A),
+                            secondary: const Icon(Icons.screen_lock_portrait_outlined, color: Colors.white70),
+                            title: const Text('Screen Capture Protection', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                            subtitle: Text('Blocks screenshots and app switcher recording', style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 12)),
+                            value: authState.isScreenCaptureProtectionEnabled,
+                            activeColor: const Color(0xFF7C3AED),
                             onChanged: (val) {
-                              ref.read(authNotifierProvider.notifier).toggleEmailRecovery(val);
+                              ref.read(authNotifierProvider.notifier).toggleScreenCaptureProtection(val);
                             },
                           ),
-                          Divider(height: 1, color: Colors.white.withOpacity(0.12)),
-                          ListTile(
-                            leading: const Icon(Icons.key_rounded, color: Colors.white70),
-                            title: const Text('Download recovery key', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text('Optional offline copy of your raw 256-bit vault key', style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 12)),
-                            trailing: const Icon(Icons.download_rounded, color: Colors.white54),
-                            onTap: _downloadOfflineRecoveryKey,
-                          ),
-                          Divider(height: 1, color: Colors.white.withOpacity(0.12)),
-                          ListTile(
-                            leading: const Icon(Icons.shield_outlined, color: Colors.white70),
-                            title: const Text('Device Lock Protection', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text('Biometrics & Device Credentials active', style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 12)),
-                            trailing: const Icon(Icons.check_circle, color: Color(0xFF00DFD8)),
-                          ),
-                          Divider(height: 1, color: Colors.white.withOpacity(0.12)),
+                          Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
                           ListTile(
                             leading: const Icon(Icons.timer_outlined, color: Colors.white70),
                             title: const Text('Auto-lock Inactivity Timeout', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
@@ -579,11 +513,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   : authState.autoLockTimeout == '5min'
                                       ? '5 Minutes'
                                       : '1 Minute (Default)',
-                              style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 12),
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 12),
                             ),
                             trailing: DropdownButton<String>(
                               value: authState.autoLockTimeout,
-                              dropdownColor: const Color(0xFF1E1B3A),
+                              dropdownColor: const Color(0xFF1E1A33),
                               underline: const SizedBox(),
                               style: const TextStyle(color: Colors.white),
                               items: const [
@@ -598,16 +532,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               },
                             ),
                           ),
-                          Divider(height: 1, color: Colors.white.withOpacity(0.12)),
-                          SwitchListTile(
-                            secondary: const Icon(Icons.screen_lock_portrait_outlined, color: Colors.white70),
-                            title: const Text('Screen Capture Protection', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text('Blocks screenshots and app switcher preview', style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 12)),
-                            value: authState.isScreenCaptureProtectionEnabled,
-                            activeColor: const Color(0xFFFF7A00),
-                            onChanged: (val) {
-                              ref.read(authNotifierProvider.notifier).toggleScreenCaptureProtection(val);
-                            },
+                          Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
+                          ListTile(
+                            leading: const Icon(Icons.key_rounded, color: Colors.white70),
+                            title: const Text('Download recovery key', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                            subtitle: Text('Optional offline copy of your raw 256-bit vault key', style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 12)),
+                            trailing: const Icon(Icons.download_rounded, color: Colors.white54),
+                            onTap: _downloadOfflineRecoveryKey,
                           ),
                         ],
                       ),

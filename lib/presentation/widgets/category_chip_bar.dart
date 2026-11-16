@@ -75,7 +75,7 @@ class CategoryChipBar extends ConsumerWidget {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Material(
-                  color: Colors.white.withOpacity(0.08),
+                  color: const Color(0xFF1E1A33).withValues(alpha: 0.7),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(22),
                     onTap: onManageCategories,
@@ -83,16 +83,16 @@ class CategoryChipBar extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: Colors.white.withOpacity(0.18)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.09)),
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.tune_rounded, size: 16, color: Colors.white70),
+                          Icon(Icons.tune_rounded, size: 16, color: Color(0xFFC4BED9)),
                           SizedBox(width: 6),
                           Text(
                             'Edit',
                             style: TextStyle(
-                              color: Colors.white70,
+                              color: Color(0xFFC4BED9),
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -108,8 +108,6 @@ class CategoryChipBar extends ConsumerWidget {
 
           final category = orderedList[index];
           final isSelected = selectedCategory == category.id;
-          final isPersonal = category.id == 'cat_personal' ||
-              category.name.toLowerCase() == 'personal';
 
           return ClipRRect(
             borderRadius: BorderRadius.circular(22),
@@ -126,47 +124,37 @@ class CategoryChipBar extends ConsumerWidget {
                   },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
                     decoration: BoxDecoration(
                       gradient: isSelected ? GlassColors.primaryGradient : null,
-                      color: isSelected ? null : Colors.white.withOpacity(0.08),
+                      color: isSelected ? null : const Color(0xFF1C1830).withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(22),
                       border: Border.all(
                         color: isSelected
-                            ? const Color(0xFFFF9E00).withOpacity(0.6)
-                            : Colors.white.withOpacity(0.15),
-                        width: 1.2,
+                            ? const Color(0xFFA78BFA).withValues(alpha: 0.5)
+                            : Colors.white.withValues(alpha: 0.08),
+                        width: 1.1,
                       ),
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: const Color(0xFFFF5E3A).withOpacity(0.3),
-                                blurRadius: 10,
+                                color: const Color(0xFF7C3AED).withValues(alpha: 0.4),
+                                blurRadius: 12,
                                 offset: const Offset(0, 3),
                               ),
                             ]
                           : [],
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isPersonal) ...[
-                          Icon(
-                            Icons.favorite_rounded,
-                            size: 14,
-                            color: isSelected ? Colors.white : const Color(0xFFFF007A),
-                          ),
-                          const SizedBox(width: 6),
-                        ],
-                        Text(
-                          category.name,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.white.withOpacity(0.8),
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            fontSize: 13,
-                          ),
+                    child: Center(
+                      child: Text(
+                        category.name,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : const Color(0xFFB4ACCE),
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontSize: 13,
+                          letterSpacing: 0.2,
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),

@@ -70,10 +70,10 @@ class _CredentialCardState extends State<CredentialCard>
         borderRadius: 20,
         blur: 18,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        backgroundColor: Colors.white.withOpacity(_isExpanded ? 0.12 : 0.07),
+        backgroundColor: const Color(0xFF171427).withValues(alpha: 0.88),
         borderColor: _isExpanded
-            ? const Color(0xFFFF7A00).withOpacity(0.4)
-            : Colors.white.withOpacity(0.15),
+            ? const Color(0xFF8B5CF6).withValues(alpha: 0.45)
+            : Colors.white.withValues(alpha: 0.08),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -83,14 +83,15 @@ class _CredentialCardState extends State<CredentialCard>
               onTap: _toggleExpanded,
               child: Row(
                 children: [
-                  // Google Profile Photo
+                  // Google Profile Photo or Smart Initials (e.g. AG, MS)
                   GoogleProfileAvatar(
                     email: widget.credential.email,
+                    label: widget.credential.label,
                     size: 42,
                   ),
                   const SizedBox(width: 14),
 
-                  // Email & optional label
+                  // Email shown fully in full (NO '...' truncation) & optional label
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,12 +100,12 @@ class _CredentialCardState extends State<CredentialCard>
                           widget.credential.email,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
+                            fontSize: 15,
                             fontWeight: FontWeight.w600,
                             letterSpacing: -0.2,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          softWrap: true,
+                          maxLines: 2,
                         ),
                         if (widget.credential.label != null &&
                             widget.credential.label!.trim().isNotEmpty) ...[
@@ -115,17 +116,17 @@ class _CredentialCardState extends State<CredentialCard>
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.12),
+                              color: const Color(0xFF231C3C),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.15),
+                                color: const Color(0xFF8B5CF6).withValues(alpha: 0.25),
                                 width: 0.8,
                               ),
                             ),
                             child: Text(
                               widget.credential.label!,
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.85),
+                              style: const TextStyle(
+                                color: Color(0xFFC4BED9),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -144,7 +145,7 @@ class _CredentialCardState extends State<CredentialCard>
                       curve: Curves.easeInOut,
                       child: const Icon(
                         Icons.keyboard_arrow_down_rounded,
-                        color: Colors.white70,
+                        color: Color(0xFFB4ACCE),
                         size: 26,
                       ),
                     ),
@@ -166,7 +167,7 @@ class _CredentialCardState extends State<CredentialCard>
                     // Frosted Divider
                     Divider(
                       height: 1,
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.08),
                     ),
                     const SizedBox(height: 12),
 
@@ -177,10 +178,10 @@ class _CredentialCardState extends State<CredentialCard>
                         vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.25),
+                        color: const Color(0xFF100D1C),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.12),
+                          color: Colors.white.withValues(alpha: 0.08),
                           width: 1,
                         ),
                       ),
@@ -189,22 +190,20 @@ class _CredentialCardState extends State<CredentialCard>
                           const Icon(
                             Icons.key_rounded,
                             size: 18,
-                            color: Color(0xFFFFB800),
+                            color: Color(0xFFA78BFA),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               _isPasswordVisible
                                   ? widget.credential.password
-                                  : '•' * widget.credential.password.length.clamp(8, 16),
+                                  : '••••••••••',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: _isPasswordVisible ? 15 : 18,
-                                letterSpacing: _isPasswordVisible ? 0.5 : 2.5,
-                                fontFamily: _isPasswordVisible ? null : 'monospace',
+                                letterSpacing: _isPasswordVisible ? 0.5 : 3.0,
                                 fontWeight: FontWeight.w600,
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           // Toggle Eye Visibility
@@ -214,7 +213,7 @@ class _CredentialCardState extends State<CredentialCard>
                                   ? Icons.visibility_off_rounded
                                   : Icons.visibility_rounded,
                               size: 20,
-                              color: Colors.white70,
+                              color: const Color(0xFFB4ACCE),
                             ),
                             tooltip: _isPasswordVisible
                                 ? 'Hide password'
@@ -226,7 +225,7 @@ class _CredentialCardState extends State<CredentialCard>
                             icon: const Icon(
                               Icons.copy_rounded,
                               size: 18,
-                              color: Colors.white70,
+                              color: Color(0xFFB4ACCE),
                             ),
                             tooltip: 'Copy password',
                             onPressed: () {
@@ -248,8 +247,8 @@ class _CredentialCardState extends State<CredentialCard>
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         TextButton.icon(
-                          icon: const Icon(Icons.email_outlined, size: 16, color: Colors.white70),
-                          label: const Text('Copy Email', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          icon: const Icon(Icons.email_outlined, size: 16, color: Color(0xFFB4ACCE)),
+                          label: const Text('Copy Email', style: TextStyle(color: Color(0xFFB4ACCE), fontSize: 12)),
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           ),
@@ -263,8 +262,8 @@ class _CredentialCardState extends State<CredentialCard>
                         ),
                         const SizedBox(width: 4),
                         TextButton.icon(
-                          icon: const Icon(Icons.edit_outlined, size: 16, color: Colors.white70),
-                          label: const Text('Edit', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFFB4ACCE)),
+                          label: const Text('Edit', style: TextStyle(color: Color(0xFFB4ACCE), fontSize: 12)),
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           ),
