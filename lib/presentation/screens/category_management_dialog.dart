@@ -20,7 +20,7 @@ class CategoryManagementDialog extends ConsumerStatefulWidget {
 class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDialog> {
   Future<void> _showAddCategoryDialog() async {
     final nameController = TextEditingController();
-    bool isLocked = true;
+    bool isLocked = false;
 
     await showDialog(
       context: context,

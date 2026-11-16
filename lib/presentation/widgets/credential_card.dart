@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/security/clipboard_service.dart';
 import '../../domain/entities/credential_entity.dart';
+import 'glass_container.dart';
+import 'google_profile_avatar.dart';
 
 class CredentialCard extends StatefulWidget {
   final CredentialEntity credential;
@@ -19,7 +21,9 @@ class CredentialCard extends StatefulWidget {
   State<CredentialCard> createState() => _CredentialCardState();
 }
 
-class _CredentialCardState extends State<CredentialCard> {
+class _CredentialCardState extends State<CredentialCard>
+    with SingleTickerProviderStateMixin {
+  bool _isExpanded = false;
   bool _isPasswordVisible = false;
   Timer? _autoMaskTimer;
 
@@ -29,6 +33,16 @@ class _CredentialCardState extends State<CredentialCard> {
     super.dispose();
   }
 
+  void _toggleExpanded() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+      if (!_isExpanded) {
+        _isPasswordVisible = false;
+        _autoMaskTimer?.cancel();
+      }
+    });
+  }
+
   void _togglePasswordVisibility() {
     setState(() {
       _isPasswordVisible = !_isPasswordVisible;
@@ -36,7 +50,7 @@ class _CredentialCardState extends State<CredentialCard> {
 
     _autoMaskTimer?.cancel();
 
-    // Re-mask automatically after 10 seconds for security
+    // Re-mask automatically after 10 seconds for privacy
     if (_isPasswordVisible) {
       _autoMaskTimer = Timer(const Duration(seconds: 10), () {
         if (mounted) {
@@ -50,193 +64,232 @@ class _CredentialCardState extends State<CredentialCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Card(
-      elevation: isDark ? 2 : 1.5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onLongPress: widget.onEdit,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header: Email ID and Options Menu
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: GlassContainer(
+        borderRadius: 20,
+        blur: 18,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        backgroundColor: Colors.white.withOpacity(_isExpanded ? 0.12 : 0.07),
+        borderColor: _isExpanded
+            ? const Color(0xFFFF7A00).withOpacity(0.4)
+            : Colors.white.withOpacity(0.15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Row: Profile Avatar, Email, and Dropdown toggle
+            InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: _toggleExpanded,
+              child: Row(
                 children: [
+                  // Google Profile Photo
+                  GoogleProfileAvatar(
+                    email: widget.credential.email,
+                    size: 42,
+                  ),
+                  const SizedBox(width: 14),
+
+                  // Email & optional label
                   Expanded(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () {
-                        ClipboardService.copy(
-                          context: context,
-                          text: widget.credential.email,
-                          message: 'Email copied',
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.credential.email,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 17,
-                                letterSpacing: -0.2,
-                                color: colorScheme.onSurface,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.credential.email,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (widget.credential.label != null &&
+                            widget.credential.label!.trim().isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.15),
+                                width: 0.8,
                               ),
-                              maxLines: 2,
+                            ),
+                            child: Text(
+                              widget.credential.label!,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.85),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  // Dropdown Arrow Button
+                  IconButton(
+                    icon: AnimatedRotation(
+                      turns: _isExpanded ? 0.5 : 0.0,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      child: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: Colors.white70,
+                        size: 26,
+                      ),
+                    ),
+                    onPressed: _toggleExpanded,
+                    tooltip: _isExpanded ? 'Collapse' : 'Show Password',
+                  ),
+                ],
+              ),
+            ),
+
+            // Dropdown content: Only visible when expanded
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Padding(
+                padding: const EdgeInsets.only(top: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Frosted Divider
+                    Divider(
+                      height: 1,
+                      color: Colors.white.withOpacity(0.15),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Password Display Box
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.12),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.key_rounded,
+                            size: 18,
+                            color: Color(0xFFFFB800),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _isPasswordVisible
+                                  ? widget.credential.password
+                                  : '•' * widget.credential.password.length.clamp(8, 16),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: _isPasswordVisible ? 15 : 18,
+                                letterSpacing: _isPasswordVisible ? 0.5 : 2.5,
+                                fontFamily: _isPasswordVisible ? null : 'monospace',
+                                fontWeight: FontWeight.w600,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                            if (widget.credential.label != null &&
-                                widget.credential.label!.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primaryContainer.withAlpha(120),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  widget.credential.label!,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  PopupMenuButton<String>(
-                    icon: Icon(
-                      Icons.more_vert,
-                      size: 20,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    onSelected: (val) {
-                      if (val == 'edit') {
-                        widget.onEdit();
-                      } else if (val == 'delete') {
-                        widget.onDelete();
-                      }
-                    },
-                    itemBuilder: (ctx) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit_outlined, size: 18),
-                            SizedBox(width: 10),
-                            Text('Edit'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_outline, size: 18, color: Colors.red.shade400),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Delete',
-                              style: TextStyle(color: Colors.red.shade400),
+                          ),
+                          // Toggle Eye Visibility
+                          IconButton(
+                            icon: Icon(
+                              _isPasswordVisible
+                                  ? Icons.visibility_off_rounded
+                                  : Icons.visibility_rounded,
+                              size: 20,
+                              color: Colors.white70,
                             ),
-                          ],
-                        ),
+                            tooltip: _isPasswordVisible
+                                ? 'Hide password'
+                                : 'Show password',
+                            onPressed: _togglePasswordVisibility,
+                          ),
+                          // Copy Password button
+                          IconButton(
+                            icon: const Icon(
+                              Icons.copy_rounded,
+                              size: 18,
+                              color: Colors.white70,
+                            ),
+                            tooltip: 'Copy password',
+                            onPressed: () {
+                              ClipboardService.copy(
+                                context: context,
+                                text: widget.credential.password,
+                                message: 'Password copied',
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Divider(height: 1, thickness: 0.8),
-              const SizedBox(height: 10),
+                    ),
 
-              // Password Row: Masked Dots / Readable text, Eye Icon, and Copy Button
-              Row(
-                children: [
-                  Expanded(
-                    child: AnimatedCrossFade(
-                      duration: const Duration(milliseconds: 200),
-                      crossFadeState: _isPasswordVisible
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      firstChild: Text(
-                        '••••••••••••',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 3,
-                          color: colorScheme.onSurfaceVariant.withAlpha(180),
+                    const SizedBox(height: 10),
+
+                    // Quick Actions Row (Copy Email, Edit, Delete)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton.icon(
+                          icon: const Icon(Icons.email_outlined, size: 16, color: Colors.white70),
+                          label: const Text('Copy Email', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          ),
+                          onPressed: () {
+                            ClipboardService.copy(
+                              context: context,
+                              text: widget.credential.email,
+                              message: 'Email copied',
+                            );
+                          },
                         ),
-                      ),
-                      secondChild: SelectableText(
-                        widget.credential.password,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontFamily: 'monospace',
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.primary,
+                        const SizedBox(width: 4),
+                        TextButton.icon(
+                          icon: const Icon(Icons.edit_outlined, size: 16, color: Colors.white70),
+                          label: const Text('Edit', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          ),
+                          onPressed: widget.onEdit,
                         ),
-                      ),
+                        const SizedBox(width: 4),
+                        TextButton.icon(
+                          icon: Icon(Icons.delete_outline, size: 16, color: Colors.red.shade300),
+                          label: Text('Delete', style: TextStyle(color: Colors.red.shade300, fontSize: 12)),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          ),
+                          onPressed: widget.onDelete,
+                        ),
+                      ],
                     ),
-                  ),
-                  // Eye Toggle Button
-                  IconButton(
-                    icon: Icon(
-                      _isPasswordVisible
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      size: 20,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    tooltip: _isPasswordVisible ? 'Hide password' : 'Show password',
-                    onPressed: _togglePasswordVisibility,
-                  ),
-                  // Copy Password Button
-                  IconButton(
-                    icon: Icon(
-                      Icons.copy_outlined,
-                      size: 20,
-                      color: colorScheme.primary,
-                    ),
-                    tooltip: 'Copy password',
-                    onPressed: () {
-                      ClipboardService.copy(
-                        context: context,
-                        text: widget.credential.password,
-                        message: 'Password copied',
-                      );
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ],
-          ),
+              crossFadeState: _isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 250),
+            ),
+          ],
         ),
       ),
     );

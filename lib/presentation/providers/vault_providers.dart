@@ -1,8 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/crypto/vault_key_wrapping_service.dart';
 import '../../core/security/biometric_service.dart';
 import '../../core/security/key_storage_service.dart';
+import '../../core/security/screen_protection_service.dart';
 import '../../data/datasources/export_import_service.dart';
 import '../../data/datasources/local_database.dart';
+import '../../data/datasources/recovery_remote_service.dart';
 import '../../data/repositories/vault_repository_impl.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/credential_entity.dart';
@@ -25,6 +28,14 @@ final biometricServiceProvider = Provider<BiometricService>((ref) {
 
 final exportImportServiceProvider = Provider<ExportImportService>((ref) {
   return ExportImportService();
+});
+
+final vaultKeyWrappingServiceProvider = Provider<VaultKeyWrappingService>((ref) {
+  return VaultKeyWrappingService();
+});
+
+final recoveryServiceProvider = Provider<RecoveryRemoteService>((ref) {
+  return RecoveryRemoteService();
 });
 
 final vaultRepositoryProvider = Provider<VaultRepository>((ref) {
@@ -50,12 +61,18 @@ class AuthState {
   final String autoLockTimeout; // 'immediate', '1min', '5min'
   final Set<String> unlockedCategoryIds;
   final DateTime lastActiveTime;
+  final bool isEmailRecoveryEnabled;
+  final bool isScreenCaptureProtectionEnabled;
+  final String? maskedRecoveryEmail;
 
   const AuthState({
     required this.status,
     required this.autoLockTimeout,
     required this.unlockedCategoryIds,
     required this.lastActiveTime,
+    this.isEmailRecoveryEnabled = true,
+    this.isScreenCaptureProtectionEnabled = true,
+    this.maskedRecoveryEmail,
   });
 
   AuthState copyWith({
@@ -63,12 +80,18 @@ class AuthState {
     String? autoLockTimeout,
     Set<String>? unlockedCategoryIds,
     DateTime? lastActiveTime,
+    bool? isEmailRecoveryEnabled,
+    bool? isScreenCaptureProtectionEnabled,
+    String? maskedRecoveryEmail,
   }) {
     return AuthState(
       status: status ?? this.status,
       autoLockTimeout: autoLockTimeout ?? this.autoLockTimeout,
       unlockedCategoryIds: unlockedCategoryIds ?? this.unlockedCategoryIds,
       lastActiveTime: lastActiveTime ?? this.lastActiveTime,
+      isEmailRecoveryEnabled: isEmailRecoveryEnabled ?? this.isEmailRecoveryEnabled,
+      isScreenCaptureProtectionEnabled: isScreenCaptureProtectionEnabled ?? this.isScreenCaptureProtectionEnabled,
+      maskedRecoveryEmail: maskedRecoveryEmail ?? this.maskedRecoveryEmail,
     );
   }
 }
@@ -76,11 +99,15 @@ class AuthState {
 class AuthNotifier extends Notifier<AuthState> {
   late final BiometricService _biometricService;
   late final KeyStorageService _keyStorageService;
+  late final VaultKeyWrappingService _wrappingService;
+  late final RecoveryRemoteService _recoveryService;
 
   @override
   AuthState build() {
     _biometricService = ref.read(biometricServiceProvider);
     _keyStorageService = ref.read(keyStorageServiceProvider);
+    _wrappingService = ref.read(vaultKeyWrappingServiceProvider);
+    _recoveryService = ref.read(recoveryServiceProvider);
 
     // Initial check
     Future.microtask(() => initialize());
@@ -90,17 +117,25 @@ class AuthNotifier extends Notifier<AuthState> {
       autoLockTimeout: '1min',
       unlockedCategoryIds: {},
       lastActiveTime: DateTime.now(),
+      isEmailRecoveryEnabled: true,
+      isScreenCaptureProtectionEnabled: true,
     );
   }
 
   Future<void> initialize() async {
     final timeout = await _keyStorageService.getAutoLockTimeout();
+    final recoveryEnabled = await _keyStorageService.getEmailRecoveryEnabled();
+    final screenCaptureEnabled = await _keyStorageService.getScreenCaptureProtectionEnabled();
+    await ScreenProtectionService.setProtection(screenCaptureEnabled);
+
     final isSecured = await _biometricService.isDeviceSecured();
 
     if (!isSecured) {
       state = state.copyWith(
         status: AuthStatus.deviceSecurityMissing,
         autoLockTimeout: timeout,
+        isEmailRecoveryEnabled: recoveryEnabled,
+        isScreenCaptureProtectionEnabled: screenCaptureEnabled,
       );
       return;
     }
@@ -109,6 +144,8 @@ class AuthNotifier extends Notifier<AuthState> {
       status: AuthStatus.locked,
       autoLockTimeout: timeout,
       unlockedCategoryIds: {},
+      isEmailRecoveryEnabled: recoveryEnabled,
+      isScreenCaptureProtectionEnabled: screenCaptureEnabled,
     );
 
     // Prompt initial unlock
@@ -129,7 +166,7 @@ class AuthNotifier extends Notifier<AuthState> {
     if (success) {
       state = state.copyWith(
         status: AuthStatus.authenticated,
-        unlockedCategoryIds: {'cat_work'}, // Work is the main entry point
+        unlockedCategoryIds: {'cat_work', 'cat_personal'},
         lastActiveTime: DateTime.now(),
       );
       return true;
@@ -139,25 +176,113 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<bool> unlockCategory(String categoryId) async {
-    if (state.unlockedCategoryIds.contains(categoryId)) {
-      recordActivity();
-      return true;
-    }
+  /// Requests 6-digit code recovery via email.
+  Future<String> requestRecovery() async {
+    final res = await _recoveryService.requestRecovery();
+    final masked = (res['emailMasked'] as String?) ?? 'your registered Google email';
+    state = state.copyWith(maskedRecoveryEmail: masked);
+    return masked;
+  }
 
-    final success = await _biometricService.authenticate(
-      localizedReason: 'Authenticate to access this locked category',
+  /// Verifies 6-digit code with Cloud Functions and retrieves decrypted Vault Key.
+  Future<String> verifyRecoveryCode(String code) async {
+    return await _recoveryService.verifyRecovery(code: code);
+  }
+
+  /// Completes recovery: re-wraps the Vault Key with user's new passphrase,
+  /// saves it to Firestore and local storage, and authenticates the app.
+  Future<void> completeRecoveryWithNewPassphrase({
+    required String vaultKey,
+    required String newPassphrase,
+  }) async {
+    final wrap = await _wrappingService.wrapVaultKey(
+      vaultKeyBase64: vaultKey,
+      passphrase: newPassphrase,
     );
 
-    if (success) {
-      final updatedSet = Set<String>.from(state.unlockedCategoryIds)..add(categoryId);
-      state = state.copyWith(
-        unlockedCategoryIds: updatedSet,
-        lastActiveTime: DateTime.now(),
+    await _keyStorageService.saveMasterKey(vaultKey);
+    await _keyStorageService.savePassphraseWrap(wrap.toJson());
+
+    final user = _recoveryService.currentUser;
+    if (user != null) {
+      await _recoveryService.savePassphraseWrap(
+        uid: user.uid,
+        wrap: wrap,
+        emailRecoveryEnabled: state.isEmailRecoveryEnabled,
       );
-      return true;
     }
-    return false;
+
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      unlockedCategoryIds: {'cat_work', 'cat_personal'},
+      lastActiveTime: DateTime.now(),
+    );
+  }
+
+  /// Changes passphrase while app is unlocked.
+  /// Needs biometric authentication and the new passphrase only.
+  /// Old passphrase is not needed on an unlocked device.
+  /// Re-wraps the existing Vault Key; vault records are NOT re-encrypted!
+  Future<bool> changePassphrase(String newPassphrase) async {
+    final isSecured = await _biometricService.authenticate(
+      localizedReason: 'Authenticate with biometrics to change your vault passphrase',
+    );
+    if (!isSecured) return false;
+
+    final vaultKey = await _keyStorageService.getOrCreateMasterKey();
+    final wrap = await _wrappingService.wrapVaultKey(
+      vaultKeyBase64: vaultKey,
+      passphrase: newPassphrase,
+    );
+
+    await _keyStorageService.savePassphraseWrap(wrap.toJson());
+
+    final user = _recoveryService.currentUser;
+    if (user != null) {
+      await _recoveryService.savePassphraseWrap(
+        uid: user.uid,
+        wrap: wrap,
+      );
+    }
+
+    return true;
+  }
+
+  /// Toggles email recovery switch.
+  Future<void> toggleEmailRecovery(bool enabled) async {
+    await _keyStorageService.setEmailRecoveryEnabled(enabled);
+    state = state.copyWith(isEmailRecoveryEnabled: enabled);
+
+    final user = _recoveryService.currentUser;
+    if (user != null) {
+      final vaultKey = await _keyStorageService.getMasterKey();
+      await _recoveryService.setEmailRecoveryEnabled(
+        uid: user.uid,
+        enabled: enabled,
+        vaultKeyBase64: vaultKey,
+      );
+    }
+  }
+
+  /// Toggles screen capture protection dynamically.
+  Future<void> toggleScreenCaptureProtection(bool enabled) async {
+    await _keyStorageService.setScreenCaptureProtectionEnabled(enabled);
+    await ScreenProtectionService.setProtection(enabled);
+    state = state.copyWith(isScreenCaptureProtectionEnabled: enabled);
+  }
+
+  /// Returns master vault key for the optional offline download.
+  Future<String> exportVaultKeyForOfflineBackup() async {
+    return await _keyStorageService.getOrCreateMasterKey();
+  }
+
+  Future<bool> unlockCategory(String categoryId) async {
+    final updatedSet = Set<String>.from(state.unlockedCategoryIds)..add(categoryId);
+    state = state.copyWith(
+      unlockedCategoryIds: updatedSet,
+      lastActiveTime: DateTime.now(),
+    );
+    return true;
   }
 
   void recordActivity() {

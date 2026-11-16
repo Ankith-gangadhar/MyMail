@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/credential_entity.dart';
 import '../providers/vault_providers.dart';
+import '../widgets/glass_container.dart';
 
 class CredentialFormSheet extends ConsumerStatefulWidget {
   final CredentialEntity? existingCredential;
@@ -23,8 +24,9 @@ class CredentialFormSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: const Color(0xFF15122E),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) => CredentialFormSheet(
         existingCredential: credential,
@@ -114,15 +116,33 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
-    final theme = Theme.of(context);
     final isEditing = widget.existingCredential != null;
+
+    final inputDecoration = InputDecoration(
+      filled: true,
+      fillColor: Colors.white.withOpacity(0.08),
+      labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+      hintStyle: TextStyle(color: Colors.white.withOpacity(0.35)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.18)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.18)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Color(0xFFFF7A00), width: 1.5),
+      ),
+    );
 
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
         right: 20,
         top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 28,
       ),
       child: Form(
         key: _formKey,
@@ -137,17 +157,20 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
                 children: [
                   Text(
                     isEditing ? 'Edit Account' : 'Add Account',
-                    style: theme.textTheme.titleLarge?.copyWith(
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.close, color: Colors.white70),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
 
               // Category Selector
               categoriesAsync.when(
@@ -158,14 +181,16 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
 
                   return DropdownButtonFormField<String>(
                     initialValue: initialVal,
-                    decoration: const InputDecoration(
+                    dropdownColor: const Color(0xFF1E1B3A),
+                    style: const TextStyle(color: Colors.white, fontSize: 15),
+                    decoration: inputDecoration.copyWith(
                       labelText: 'Category',
-                      prefixIcon: Icon(Icons.folder_outlined),
+                      prefixIcon: const Icon(Icons.folder_outlined, color: Colors.white70),
                     ),
                     items: categories
                         .map((c) => DropdownMenuItem(
                               value: c.id,
-                              child: Text(c.name),
+                              child: Text(c.name, style: const TextStyle(color: Colors.white)),
                             ))
                         .toList(),
                     onChanged: (val) {
@@ -177,7 +202,7 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
                     },
                   );
                 },
-                loading: () => const LinearProgressIndicator(),
+                loading: () => const LinearProgressIndicator(color: Color(0xFFFF7A00)),
                 error: (e, st) => const SizedBox(),
               ),
               const SizedBox(height: 16),
@@ -187,10 +212,11 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 autocorrect: false,
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Colors.white),
+                decoration: inputDecoration.copyWith(
                   labelText: 'Email ID *',
-                  hintText: 'user@example.com',
-                  prefixIcon: Icon(Icons.email_outlined),
+                  hintText: 'user@gmail.com',
+                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.white70),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -208,15 +234,17 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                decoration: InputDecoration(
+                style: const TextStyle(color: Colors.white),
+                decoration: inputDecoration.copyWith(
                   labelText: 'Password *',
-                  prefixIcon: const Icon(Icons.lock_outline),
+                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.white70),
                   suffixIcon: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                          color: Colors.white70,
                         ),
                         onPressed: () {
                           setState(() {
@@ -226,7 +254,7 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
                       ),
                       IconButton(
                         tooltip: 'Generate Strong Password',
-                        icon: const Icon(Icons.auto_fix_high_rounded),
+                        icon: const Icon(Icons.auto_fix_high_rounded, color: Color(0xFFFFB800)),
                         onPressed: _generateStrongPassword,
                       ),
                     ],
@@ -244,26 +272,26 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
               // Optional Label Input
               TextFormField(
                 controller: _labelController,
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Colors.white),
+                decoration: inputDecoration.copyWith(
                   labelText: 'Label (Optional)',
                   hintText: 'e.g. Primary, Staging, Backup Admin',
-                  prefixIcon: Icon(Icons.tag_outlined),
+                  prefixIcon: const Icon(Icons.tag_outlined, color: Colors.white70),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 26),
 
-              // Save Action Button
-              FilledButton(
+              // Save Action Button with Gradient
+              GlassGradientButton(
                 onPressed: _save,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
                 child: Text(
                   isEditing ? 'Save Changes' : 'Save Account',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
             ],

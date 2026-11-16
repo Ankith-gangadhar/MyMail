@@ -30,9 +30,9 @@ class MyMailApp extends StatelessWidget {
     return MaterialApp(
       title: 'MyMail',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
+      theme: AppTheme.darkTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, // Follows system setting
+      themeMode: ThemeMode.dark, // Dark Glassmorphism aesthetic
       home: const AuthGuardScreen(),
     );
   }

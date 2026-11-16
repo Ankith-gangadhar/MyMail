@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User document: stores passphrase_wrap and preferences
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Private subcollection containing recovery wrap and code hashes.
+      // The client must NEVER read or write the recovery wrap or code hashes directly.
+      match /private/{document=**} {
+        allow read, write: if false;
+      }
+    }
+
+    // Mail queue for "Trigger Email from Firestore" extension.
+    // Clients must never write emails directly.
+    match /mail/{mailId} {
+      allow read, write: if false;
+    }
+  }
+}
