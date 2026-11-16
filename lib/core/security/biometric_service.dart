@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -9,6 +10,7 @@ class BiometricService {
 
   /// Checks if the device has security hardware / enrolled lock (biometrics or device PIN/pattern/password).
   Future<bool> isDeviceSecured() async {
+    if (kIsWeb) return true;
     try {
       final isSupported = await _auth.isDeviceSupported();
       if (!isSupported) {
@@ -27,6 +29,7 @@ class BiometricService {
     required String localizedReason,
     bool sensitiveTransaction = true,
   }) async {
+    if (kIsWeb) return true;
     try {
       final isSupported = await _auth.isDeviceSupported();
       if (!isSupported) {
