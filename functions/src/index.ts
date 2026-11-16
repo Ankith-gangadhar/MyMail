@@ -1,18 +1,57 @@
 import * as crypto from "crypto";
-import { KeyManagementServiceClient } from "@google-cloud/kms";
 import * as admin from "firebase-admin";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineString } from "firebase-functions/params";
 
 admin.initializeApp();
 const db = admin.firestore();
-const kmsClient = new KeyManagementServiceClient();
 
-// Configuration parameters
-const kmsKeyNameParam = defineString("KMS_KEY_NAME", {
-  default: "projects/mymail-app/locations/global/keyRings/mymail-ring/cryptoKeys/recovery-key",
-  description: "Full resource path to the Cloud KMS key for recovery wrap",
+/**
+ * 100% Free Server Secret for Encrypting Vault Recovery Wraps.
+ * Eliminates Google Cloud KMS to guarantee $0.00/month cost forever.
+ */
+const recoverySecretParam = defineString("RECOVERY_SECRET", {
+  default: "mymail-vault-free-server-recovery-key-32b!",
+  description: "Internal server secret for encrypting recovery wraps (100% Free, no Cloud KMS cost)",
 });
+
+function getServerKey(): Buffer {
+  const secret = recoverySecretParam.value() || "mymail-vault-free-server-recovery-key-32b!";
+  return crypto.createHash("sha256").update(secret).digest();
+}
+
+/**
+ * Server-side AES-256-GCM encryption
+ */
+function serverEncrypt(plaintextBase64: string): string {
+  const key = getServerKey();
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const plaintext = Buffer.from(plaintextBase64, "base64");
+  const encrypted = Buffer.concat([cipher.update(plaintext), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  // Packed format: iv (12 bytes) + tag (16 bytes) + ciphertext
+  return Buffer.concat([iv, tag, encrypted]).toString("base64");
+}
+
+/**
+ * Server-side AES-256-GCM decryption
+ */
+function serverDecrypt(envelopeBase64: string): string {
+  const key = getServerKey();
+  const raw = Buffer.from(envelopeBase64, "base64");
+  if (raw.length < 28) {
+    throw new Error("Invalid recovery envelope length.");
+  }
+  const iv = raw.subarray(0, 12);
+  const tag = raw.subarray(12, 28);
+  const ciphertext = raw.subarray(28);
+
+  const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+  decipher.setAuthTag(tag);
+  const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  return decrypted.toString("base64");
+}
 
 /**
  * Masks an email for display: user@example.com -> u***@example.com
@@ -29,8 +68,8 @@ function maskEmail(email: string): string {
 /**
  * 1. setRecoveryWrap
  * Receives the 256-bit Vault Key (VK) over TLS from authenticated client,
- * encrypts it with Cloud KMS, and stores the recovery wrap in Firestore
- * under users/{uid}/private/recovery.
+ * encrypts it server-side using AES-256-GCM (100% Free), and stores the
+ * recovery wrap in Firestore under users/{uid}/private/recovery.
  */
 export const setRecoveryWrap = onCall(async (request) => {
   if (!request.auth) {
@@ -44,20 +83,9 @@ export const setRecoveryWrap = onCall(async (request) => {
     throw new HttpsError("invalid-argument", "Missing or invalid 'vaultKey' base64 string.");
   }
 
-  const keyName = kmsKeyNameParam.value();
-
   try {
-    // Encrypt Vault Key with Google Cloud KMS
-    const [encryptResponse] = await kmsClient.encrypt({
-      name: keyName,
-      plaintext: Buffer.from(vaultKey, "base64"),
-    });
-
-    if (!encryptResponse.ciphertext) {
-      throw new Error("KMS encryption returned empty ciphertext.");
-    }
-
-    const recoveryWrap = Buffer.from(encryptResponse.ciphertext).toString("base64");
+    // Encrypt Vault Key server-side (100% Free, zero cloud cost)
+    const recoveryWrap = serverEncrypt(vaultKey);
 
     // Store encrypted recovery wrap in protected subcollection
     await db.collection("users").doc(uid).collection("private").doc("recovery").set(
@@ -135,8 +163,6 @@ export const requestRecovery = onCall(async (request) => {
   );
 
   // Send email via "Trigger Email from Firestore" extension
-  // Plain, clear email format as requested:
-  // "Your MyMail recovery code is 123456. It expires in 15 minutes."
   await db.collection("mail").add({
     to: [userEmail],
     message: {
@@ -156,7 +182,7 @@ export const requestRecovery = onCall(async (request) => {
 /**
  * 3. verifyRecovery
  * Validates the single-use 6-digit recovery code.
- * Limits to 5 attempts. If valid and not expired, decrypts the VK via Cloud KMS
+ * Limits to 5 attempts. If valid and not expired, decrypts the VK server-side
  * and returns it over TLS to the client session.
  */
 export const verifyRecovery = onCall(async (request) => {
@@ -225,34 +251,23 @@ export const verifyRecovery = onCall(async (request) => {
     recoveredAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
-  const keyName = kmsKeyNameParam.value();
-
   try {
-    // Decrypt Vault Key with Google Cloud KMS
-    const [decryptResponse] = await kmsClient.decrypt({
-      name: keyName,
-      ciphertext: Buffer.from(recoveryWrap, "base64"),
-    });
-
-    if (!decryptResponse.plaintext) {
-      throw new Error("KMS decryption produced empty plaintext.");
-    }
-
-    const vaultKey = Buffer.from(decryptResponse.plaintext).toString("base64");
+    // Decrypt Vault Key server-side (100% Free, zero cloud cost)
+    const vaultKey = serverDecrypt(recoveryWrap);
 
     return {
       success: true,
       vaultKey,
     };
   } catch (error: any) {
-    console.error("Error decrypting with KMS:", error);
-    throw new HttpsError("internal", "Failed to decrypt Vault Key with KMS.");
+    console.error("Error decrypting recovery wrap:", error);
+    throw new HttpsError("internal", "Failed to decrypt Vault Key.");
   }
 });
 
 /**
  * 4. disableRecovery
- * Allows the user to disable email recovery and delete their KMS recovery wrap.
+ * Allows the user to disable email recovery and delete their server recovery wrap.
  */
 export const disableRecovery = onCall(async (request) => {
   if (!request.auth) {

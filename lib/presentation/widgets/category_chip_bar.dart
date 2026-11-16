@@ -49,11 +49,13 @@ class CategoryChipBar extends ConsumerWidget {
     }).toList();
 
     final orderedList = <CategoryEntity>[];
-    if (categories.any((c) => c.id == workCategory.id)) {
-      orderedList.add(workCategory);
+    orderedList.add(workCategory);
+    for (final c in middleCategories) {
+      if (!orderedList.any((existing) => existing.id == c.id)) {
+        orderedList.add(c);
+      }
     }
-    orderedList.addAll(middleCategories);
-    if (categories.any((c) => c.id == personalCategory.id)) {
+    if (!orderedList.any((c) => c.id == personalCategory.id)) {
       orderedList.add(personalCategory);
     }
 

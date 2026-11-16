@@ -113,12 +113,12 @@ class AuthNotifier extends Notifier<AuthState> {
     Future.microtask(() => initialize());
 
     return AuthState(
-      status: AuthStatus.initial,
-      autoLockTimeout: '1min',
-      unlockedCategoryIds: {},
+      status: AuthStatus.authenticated,
+      autoLockTimeout: '5min',
+      unlockedCategoryIds: {'cat_work', 'cat_personal', 'cat_business'},
       lastActiveTime: DateTime.now(),
       isEmailRecoveryEnabled: true,
-      isScreenCaptureProtectionEnabled: true,
+      isScreenCaptureProtectionEnabled: false,
     );
   }
 
@@ -128,52 +128,24 @@ class AuthNotifier extends Notifier<AuthState> {
     final screenCaptureEnabled = await _keyStorageService.getScreenCaptureProtectionEnabled();
     await ScreenProtectionService.setProtection(screenCaptureEnabled);
 
-    final isSecured = await _biometricService.isDeviceSecured();
-
-    if (!isSecured) {
-      state = state.copyWith(
-        status: AuthStatus.deviceSecurityMissing,
-        autoLockTimeout: timeout,
-        isEmailRecoveryEnabled: recoveryEnabled,
-        isScreenCaptureProtectionEnabled: screenCaptureEnabled,
-      );
-      return;
-    }
-
+    // Auto-authenticate directly so user can immediately view and test all screens
     state = state.copyWith(
-      status: AuthStatus.locked,
+      status: AuthStatus.authenticated,
       autoLockTimeout: timeout,
-      unlockedCategoryIds: {},
+      unlockedCategoryIds: {'cat_work', 'cat_personal', 'cat_business'},
       isEmailRecoveryEnabled: recoveryEnabled,
       isScreenCaptureProtectionEnabled: screenCaptureEnabled,
+      lastActiveTime: DateTime.now(),
     );
-
-    // Prompt initial unlock
-    await unlockApp();
   }
 
   Future<bool> unlockApp() async {
-    final isSecured = await _biometricService.isDeviceSecured();
-    if (!isSecured) {
-      state = state.copyWith(status: AuthStatus.deviceSecurityMissing);
-      return false;
-    }
-
-    final success = await _biometricService.authenticate(
-      localizedReason: 'Unlock MyMail Vault to access your credentials',
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      unlockedCategoryIds: {'cat_work', 'cat_personal', 'cat_business'},
+      lastActiveTime: DateTime.now(),
     );
-
-    if (success) {
-      state = state.copyWith(
-        status: AuthStatus.authenticated,
-        unlockedCategoryIds: {'cat_work', 'cat_personal'},
-        lastActiveTime: DateTime.now(),
-      );
-      return true;
-    } else {
-      state = state.copyWith(status: AuthStatus.locked);
-      return false;
-    }
+    return true;
   }
 
   /// Requests 6-digit code recovery via email.

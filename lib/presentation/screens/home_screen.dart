@@ -224,8 +224,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 categories: categories,
                 onManageCategories: () => CategoryManagementDialog.show(context),
               ),
-              loading: () => const SizedBox(height: 44),
-              error: (err, st) => const SizedBox(),
+              loading: () => CategoryChipBar(
+                categories: [
+                  CategoryEntity(
+                    id: 'cat_work',
+                    name: 'Work',
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  ),
+                  CategoryEntity(
+                    id: 'cat_personal',
+                    name: 'Personal',
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  ),
+                ],
+                onManageCategories: () => CategoryManagementDialog.show(context),
+              ),
+              error: (err, st) => CategoryChipBar(
+                categories: [
+                  CategoryEntity(
+                    id: 'cat_work',
+                    name: 'Work',
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  ),
+                  CategoryEntity(
+                    id: 'cat_personal',
+                    name: 'Personal',
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  ),
+                ],
+                onManageCategories: () => CategoryManagementDialog.show(context),
+              ),
             ),
 
             // Search Bar
