@@ -166,6 +166,11 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
         ? categoriesAsync.value!
         : defaultCategories;
 
+    final currentCat = availableCategories.firstWhere(
+      (c) => c.id == _selectedCategoryId,
+      orElse: () => availableCategories.first,
+    );
+
     return Padding(
       padding: EdgeInsets.only(
         left: 20,
@@ -184,14 +189,28 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    isEditing ? 'Edit Account' : 'Add Account',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.3,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isEditing ? 'Edit Account' : 'Add Account',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Category: ${currentCat.name}',
+                        style: const TextStyle(
+                          color: Color(0xFFA78BFA),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Color(0xFFB4ACCE)),
@@ -200,33 +219,6 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
                 ],
               ),
               const SizedBox(height: 18),
-
-              // Category Selector
-              DropdownButtonFormField<String>(
-                value: availableCategories.any((c) => c.id == _selectedCategoryId)
-                    ? _selectedCategoryId
-                    : availableCategories.first.id,
-                dropdownColor: const Color(0xFF1E1A33),
-                decoration: inputDecoration.copyWith(
-                  labelText: 'Category',
-                  prefixIcon: const Icon(Icons.folder_outlined, color: Color(0xFFA78BFA)),
-                ),
-                style: const TextStyle(color: Colors.white, fontSize: 15),
-                items: availableCategories.map((c) {
-                  return DropdownMenuItem<String>(
-                    value: c.id,
-                    child: Text(c.name, style: const TextStyle(color: Colors.white)),
-                  );
-                }).toList(),
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() {
-                      _selectedCategoryId = val;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
 
               // Email Input
               TextFormField(

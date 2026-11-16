@@ -298,22 +298,19 @@ class AuthNotifier extends Notifier<AuthState> {
 final authNotifierProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
 
 // Categories Provider
-class CategoriesNotifier extends Notifier<AsyncValue<List<CategoryEntity>>> {
-  late final VaultRepository _repository;
-
+class CategoriesNotifier extends AsyncNotifier<List<CategoryEntity>> {
   @override
-  AsyncValue<List<CategoryEntity>> build() {
-    _repository = ref.read(vaultRepositoryProvider);
-    Future.microtask(() => loadCategories());
-    return const AsyncValue.loading();
+  Future<List<CategoryEntity>> build() async {
+    final repository = ref.watch(vaultRepositoryProvider);
+    return await repository.getCategories();
   }
 
   Future<void> loadCategories() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async => await _repository.getCategories());
+    ref.invalidateSelf();
   }
 
   Future<void> addCategory(String name, bool isLocked) async {
+    final repository = ref.read(vaultRepositoryProvider);
     final existing = state.value ?? [];
     final newCategory = CategoryEntity(
       id: 'cat_${DateTime.now().millisecondsSinceEpoch}',
@@ -325,51 +322,56 @@ class CategoriesNotifier extends Notifier<AsyncValue<List<CategoryEntity>>> {
       updatedAt: DateTime.now().toUtc(),
     );
 
-    await _repository.saveCategory(newCategory);
-    await loadCategories();
+    await repository.saveCategory(newCategory);
+    ref.invalidateSelf();
   }
 
   Future<void> renameCategory(String id, String newName) async {
-    final cat = await _repository.getCategoryById(id);
+    final repository = ref.read(vaultRepositoryProvider);
+    final cat = await repository.getCategoryById(id);
     if (cat != null) {
       final updated = cat.copyWith(
         name: newName.trim(),
         updatedAt: DateTime.now().toUtc(),
       );
-      await _repository.saveCategory(updated);
-      await loadCategories();
+      await repository.saveCategory(updated);
+      ref.invalidateSelf();
     }
   }
 
   Future<void> toggleCategoryLock(String id, bool isLocked) async {
-    final cat = await _repository.getCategoryById(id);
+    final repository = ref.read(vaultRepositoryProvider);
+    final cat = await repository.getCategoryById(id);
     if (cat != null) {
       final updated = cat.copyWith(
         isLocked: isLocked,
         updatedAt: DateTime.now().toUtc(),
       );
-      await _repository.saveCategory(updated);
-      await loadCategories();
+      await repository.saveCategory(updated);
+      ref.invalidateSelf();
     }
   }
 
   Future<void> reorderCategories(int oldIndex, int newIndex) async {
+    final repository = ref.read(vaultRepositoryProvider);
     final list = List<CategoryEntity>.from(state.value ?? []);
-    final item = list.removeAt(oldIndex);
-    list.insert(newIndex, item);
-
-    state = AsyncValue.data(list);
-    await _repository.reorderCategories(list.map((c) => c.id).toList());
-    await loadCategories();
+    if (oldIndex < list.length && newIndex < list.length) {
+      final item = list.removeAt(oldIndex);
+      list.insert(newIndex, item);
+      state = AsyncValue.data(list);
+      await repository.reorderCategories(list.map((c) => c.id).toList());
+      ref.invalidateSelf();
+    }
   }
 
   Future<void> deleteCategory(String id) async {
-    await _repository.deleteCategory(id);
-    await loadCategories();
+    final repository = ref.read(vaultRepositoryProvider);
+    await repository.deleteCategory(id);
+    ref.invalidateSelf();
   }
 }
 
-final categoriesProvider = NotifierProvider<CategoriesNotifier, AsyncValue<List<CategoryEntity>>>(
+final categoriesProvider = AsyncNotifierProvider<CategoriesNotifier, List<CategoryEntity>>(
   CategoriesNotifier.new,
 );
 
@@ -388,36 +390,32 @@ final selectedCategoryProvider = NotifierProvider<SelectedCategoryNotifier, Stri
 );
 
 // Credentials for Selected Category
-class CredentialsNotifier extends Notifier<AsyncValue<List<CredentialEntity>>> {
-  late final VaultRepository _repository;
-
+class CredentialsNotifier extends AsyncNotifier<List<CredentialEntity>> {
   @override
-  AsyncValue<List<CredentialEntity>> build() {
-    _repository = ref.read(vaultRepositoryProvider);
+  Future<List<CredentialEntity>> build() async {
+    final repository = ref.watch(vaultRepositoryProvider);
     final selectedCategory = ref.watch(selectedCategoryProvider);
-    Future.microtask(() => loadForCategory(selectedCategory));
-    return const AsyncValue.loading();
+    return await repository.getCredentialsByCategory(selectedCategory);
   }
 
-  Future<void> loadForCategory(String categoryId) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async => await _repository.getCredentialsByCategory(categoryId));
+  Future<void> loadForCategory([String? categoryId]) async {
+    ref.invalidateSelf();
   }
 
   Future<void> saveCredential(CredentialEntity credential) async {
-    await _repository.saveCredential(credential);
-    final selectedCategory = ref.read(selectedCategoryProvider);
-    await loadForCategory(selectedCategory);
+    final repository = ref.read(vaultRepositoryProvider);
+    await repository.saveCredential(credential);
+    ref.invalidateSelf();
   }
 
   Future<void> deleteCredential(String id) async {
-    await _repository.deleteCredential(id);
-    final selectedCategory = ref.read(selectedCategoryProvider);
-    await loadForCategory(selectedCategory);
+    final repository = ref.read(vaultRepositoryProvider);
+    await repository.deleteCredential(id);
+    ref.invalidateSelf();
   }
 }
 
-final credentialsProvider = NotifierProvider<CredentialsNotifier, AsyncValue<List<CredentialEntity>>>(
+final credentialsProvider = AsyncNotifierProvider<CredentialsNotifier, List<CredentialEntity>>(
   CredentialsNotifier.new,
 );
 

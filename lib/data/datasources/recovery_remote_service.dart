@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/crypto/vault_key_wrapping_service.dart';
 
@@ -9,6 +10,7 @@ class RecoveryRemoteService {
   final FirebaseFirestore? _injectedFirestore;
   final FirebaseFunctions? _injectedFunctions;
   final GoogleSignIn? _injectedGoogleSignIn;
+  static bool _googleSignInInitialized = false;
 
   RecoveryRemoteService({
     FirebaseAuth? auth,
@@ -35,7 +37,36 @@ class RecoveryRemoteService {
 
   /// Signs in using Google Sign-In and Firebase Auth.
   Future<UserCredential> signInWithGoogle() async {
-    await _googleSignIn.initialize();
+    if (kIsWeb) {
+      try {
+        final googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+        return await _auth.signInWithPopup(googleProvider);
+      } catch (e) {
+        // Fallback or rethrow clean message
+        if (e.toString().contains('popup-closed-by-user')) {
+          throw Exception('Sign-in cancelled by user');
+        }
+        rethrow;
+      }
+    }
+
+    // Android / iOS native Google Sign-In
+    if (!_googleSignInInitialized) {
+      try {
+        await _googleSignIn.initialize();
+        _googleSignInInitialized = true;
+      } catch (e) {
+        if (e.toString().contains('already been called') ||
+            e.toString().contains('init()')) {
+          _googleSignInInitialized = true;
+        } else {
+          rethrow;
+        }
+      }
+    }
+
     final account = await _googleSignIn.authenticate();
     final auth = account.authentication;
     final credential = GoogleAuthProvider.credential(

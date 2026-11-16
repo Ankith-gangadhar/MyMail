@@ -6,6 +6,7 @@ import '../providers/vault_providers.dart';
 import '../widgets/category_chip_bar.dart';
 import '../widgets/credential_card.dart';
 import '../widgets/glass_container.dart';
+import '../widgets/google_profile_avatar.dart';
 import '../widgets/search_bar_widget.dart';
 import 'category_management_dialog.dart';
 import 'credential_form_sheet.dart';
@@ -172,54 +173,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         elevation: 0,
         title: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: GlassColors.primaryGradient,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
-                    blurRadius: 10,
-                  ),
-                ],
+            InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                );
+              },
+              child: const GoogleProfileAvatar(
+                email: 'ankith.gangadhar@gmail.com',
+                label: 'Ankith Gangadhar',
+                size: 36,
               ),
-              child: const Icon(Icons.shield_outlined, size: 20, color: Colors.white),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'MyMail',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                letterSpacing: 0.2,
-              ),
+            const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'MyMail',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 19,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                Text(
+                  'Vault Active',
+                  style: TextStyle(
+                    color: Color(0xFFA78BFA),
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
         actions: [
-          // Share Category action - Strictly hidden for Personal category
-          if (!isPersonalCategory && currentCategory != null)
-            IconButton(
-              tooltip: 'Export & Share (${currentCategory.name})',
-              icon: const Icon(Icons.share_outlined, color: Colors.white70),
-              onPressed: () {
+          // Share Category action
+          IconButton(
+            tooltip: 'Export & Share (${currentCategory?.name ?? "Category"})',
+            icon: const Icon(Icons.share_outlined, color: Colors.white70),
+            onPressed: () {
+              if (currentCategory != null) {
                 final allCredentials = credentialsAsync.value ?? [];
                 _shareCurrentCategory(currentCategory, allCredentials);
-              },
-            ),
-          // Settings Action
-          IconButton(
-            tooltip: 'Settings & Security',
-            icon: const Icon(Icons.settings_outlined, color: Colors.white70),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
+              }
             },
           ),
-          // Quick Lock Button
+          // Quick Lock Button - side by side with Share
           IconButton(
             tooltip: 'Lock Vault',
             icon: const Icon(Icons.lock_outline, color: Colors.white70),
@@ -227,6 +232,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ref.read(authNotifierProvider.notifier).lockApp();
             },
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: GlassBackground(

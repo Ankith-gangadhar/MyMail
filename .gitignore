@@ -45,4 +45,7 @@ app.*.map.json
 /android/app/release
 
 *.apk
+.kotlin/
+.gradle/
+hs_err_pid*.log
 

@@ -77,80 +77,89 @@ class _CredentialCardState extends State<CredentialCard>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Row: Profile Avatar, Email, and Dropdown toggle
+            // Top Header: Avatar, Optional Label, and Dropdown toggle
             InkWell(
               borderRadius: BorderRadius.circular(14),
               onTap: _toggleExpanded,
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Google Profile Photo or Smart Initials (e.g. AG, MS)
-                  GoogleProfileAvatar(
-                    email: widget.credential.email,
-                    label: widget.credential.label,
-                    size: 42,
-                  ),
-                  const SizedBox(width: 14),
+                  Row(
+                    children: [
+                      // Google Profile Photo or Smart Initials (e.g. AG, MS)
+                      GoogleProfileAvatar(
+                        email: widget.credential.email,
+                        label: widget.credential.label,
+                        size: 34,
+                      ),
+                      const SizedBox(width: 12),
 
-                  // Email shown fully in full (NO '...' truncation) & optional label
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.credential.email,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.2,
+                      // Optional Label / Name beside avatar
+                      Expanded(
+                        child: widget.credential.label != null &&
+                                widget.credential.label!.trim().isNotEmpty &&
+                                widget.credential.label!.trim().toLowerCase() !=
+                                    widget.credential.email.trim().toLowerCase()
+                            ? Text(
+                                widget.credential.label!.trim(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -0.1,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+
+                      // Dropdown Arrow Button
+                      IconButton(
+                        icon: AnimatedRotation(
+                          turns: _isExpanded ? 0.5 : 0.0,
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeInOut,
+                          child: const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: Color(0xFFB4ACCE),
+                            size: 24,
                           ),
-                          softWrap: true,
-                          maxLines: 2,
                         ),
-                        if (widget.credential.label != null &&
-                            widget.credential.label!.trim().isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF231C3C),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: const Color(0xFF8B5CF6).withValues(alpha: 0.25),
-                                width: 0.8,
-                              ),
-                            ),
-                            child: Text(
-                              widget.credential.label!,
-                              style: const TextStyle(
-                                color: Color(0xFFC4BED9),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+                        onPressed: _toggleExpanded,
+                        tooltip: _isExpanded ? 'Collapse' : 'Show Password',
+                      ),
+                    ],
                   ),
 
-                  // Dropdown Arrow Button
-                  IconButton(
-                    icon: AnimatedRotation(
-                      turns: _isExpanded ? 0.5 : 0.0,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeInOut,
-                      child: const Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: Color(0xFFB4ACCE),
-                        size: 26,
+                  // Dedicated Full-Width Email Line directly below avatar & header area
+                  const SizedBox(height: 6),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF100D1C).withValues(alpha: 0.60),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        width: 1,
                       ),
                     ),
-                    onPressed: _toggleExpanded,
-                    tooltip: _isExpanded ? 'Collapse' : 'Show Password',
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        widget.credential.email,
+                        style: const TextStyle(
+                          color: Color(0xFFE2DCF0),
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.15,
+                        ),
+                        maxLines: 1,
+                        softWrap: false,
+                      ),
+                    ),
                   ),
                 ],
               ),

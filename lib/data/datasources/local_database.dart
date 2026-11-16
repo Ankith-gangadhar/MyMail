@@ -54,12 +54,12 @@ class LocalDatabase {
           )
         ''');
 
-        // Prepopulate default categories: Work and Personal
+        // Prepopulate default categories: Work, Personal, and Business (unlocked by default)
         final now = DateTime.now().toUtc().toIso8601String();
         await db.insert('categories', {
           'id': 'cat_work',
           'name': 'Work',
-          'is_locked': 1,
+          'is_locked': 0,
           'is_default': 1,
           'sort_order': 0,
           'created_at': now,
@@ -70,13 +70,40 @@ class LocalDatabase {
         await db.insert('categories', {
           'id': 'cat_personal',
           'name': 'Personal',
-          'is_locked': 1,
+          'is_locked': 0,
           'is_default': 1,
           'sort_order': 1,
           'created_at': now,
           'updated_at': now,
           'is_deleted': 0,
         });
+
+        await db.insert('categories', {
+          'id': 'cat_business',
+          'name': 'Business',
+          'is_locked': 0,
+          'is_default': 1,
+          'sort_order': 2,
+          'created_at': now,
+          'updated_at': now,
+          'is_deleted': 0,
+        });
+      },
+      onOpen: (db) async {
+        final existing = await db.query('categories', where: 'id = ?', whereArgs: ['cat_business']);
+        if (existing.isEmpty) {
+          final now = DateTime.now().toUtc().toIso8601String();
+          await db.insert('categories', {
+            'id': 'cat_business',
+            'name': 'Business',
+            'is_locked': 0,
+            'is_default': 1,
+            'sort_order': 2,
+            'created_at': now,
+            'updated_at': now,
+            'is_deleted': 0,
+          });
+        }
       },
     );
   }
