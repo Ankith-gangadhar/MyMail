@@ -248,9 +248,11 @@ class _CredentialCardState extends State<CredentialCard>
 
                           // Password Display Box with shiny metallic border
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
+                            padding: const EdgeInsets.only(
+                              left: 14,
+                              right: 6,
+                              top: 6,
+                              bottom: 6,
                             ),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
@@ -285,8 +287,8 @@ class _CredentialCardState extends State<CredentialCard>
                                           : '••••••••',
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: _isPasswordVisible ? 13 : 15,
-                                        letterSpacing: _isPasswordVisible ? 0.2 : 2.0,
+                                        fontSize: _isPasswordVisible ? 15.5 : 17,
+                                        letterSpacing: _isPasswordVisible ? 0.3 : 2.0,
                                         fontWeight: FontWeight.w600,
                                       ),
                                       maxLines: 1,
@@ -295,8 +297,15 @@ class _CredentialCardState extends State<CredentialCard>
                                     ),
                                   ),
                                 ),
-                                // Toggle Eye Visibility
+                                const SizedBox(width: 6),
+                                // Toggle Eye Visibility (shifted right)
                                 IconButton(
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 32,
+                                    minHeight: 32,
+                                  ),
+                                  splashRadius: 18,
                                   icon: Icon(
                                     _isPasswordVisible
                                         ? Icons.visibility_off_rounded
@@ -309,8 +318,15 @@ class _CredentialCardState extends State<CredentialCard>
                                       : 'Show password',
                                   onPressed: _togglePasswordVisibility,
                                 ),
-                                // Copy Password button
+                                const SizedBox(width: 2),
+                                // Copy Password button (extreme right, slightly away from corner)
                                 IconButton(
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 32,
+                                    minHeight: 32,
+                                  ),
+                                  splashRadius: 18,
                                   icon: const Icon(
                                     Icons.copy_rounded,
                                     size: 18,

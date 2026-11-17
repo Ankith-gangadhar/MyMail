@@ -66,17 +66,11 @@ class GoogleProfileAvatar extends StatelessWidget {
   }
 
   String? get _photoUrl {
+    // Only use explicit photoUrl (e.g. from logged-in Google account in top app bar)
+    // Never fall back to currentUser for credential cards
     if (photoUrl != null && photoUrl!.trim().isNotEmpty) {
       return photoUrl!.trim();
     }
-    try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null &&
-          currentUser.photoURL != null &&
-          currentUser.photoURL!.isNotEmpty) {
-        return currentUser.photoURL;
-      }
-    } catch (_) {}
     return null;
   }
 
@@ -85,7 +79,7 @@ class GoogleProfileAvatar extends StatelessWidget {
     final initials = getInitials(email, label);
     final photo = _photoUrl;
 
-    Widget avatarContent = Container(
+    Widget monogramWidget = Container(
       alignment: Alignment.center,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
@@ -93,8 +87,8 @@ class GoogleProfileAvatar extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF2B2D36),
-            Color(0xFF141518),
+            Color(0xFF262529),
+            Color(0xFF141316),
           ],
         ),
       ),
@@ -103,20 +97,29 @@ class GoogleProfileAvatar extends StatelessWidget {
         style: TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
-          fontSize: size * 0.40,
+          fontSize: size * 0.38,
           letterSpacing: 0.5,
         ),
       ),
     );
 
-    if (photo != null) {
-      avatarContent = Image.network(
-        photo,
-        fit: BoxFit.cover,
-        width: size,
-        height: size,
-        errorBuilder: (context, error, stackTrace) => avatarContent,
+    Widget avatarContent;
+    if (photo != null && photo.isNotEmpty) {
+      avatarContent = Stack(
+        fit: StackFit.expand,
+        children: [
+          monogramWidget,
+          Image.network(
+            photo,
+            fit: BoxFit.cover,
+            width: size,
+            height: size,
+            errorBuilder: (context, error, stackTrace) => monogramWidget,
+          ),
+        ],
       );
+    } else {
+      avatarContent = monogramWidget;
     }
 
     return Container(
@@ -126,13 +129,13 @@ class GoogleProfileAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withOpacity(0.20),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
         border: Border.all(
-          color: const Color(0xFFFF5225).withOpacity(0.40),
+          color: const Color(0xFFFF5225).withOpacity(0.50),
           width: 1.2,
         ),
       ),
