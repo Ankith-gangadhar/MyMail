@@ -27,19 +27,26 @@ class _VaultSearchBarState extends ConsumerState<VaultSearchBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-      height: 46,
+      margin: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+      height: 48,
       decoration: BoxDecoration(
-        color: Colors.transparent, // Completely transparent
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.10),
+          color: Colors.black.withOpacity(0.06),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: TextField(
         controller: _controller,
-        style: const TextStyle(color: Colors.white, fontSize: 13.5),
+        style: const TextStyle(color: Color(0xFF191817), fontSize: 14),
         onChanged: (val) {
           ref.read(searchQueryProvider.notifier).setQuery(val);
           setState(() {});
@@ -48,16 +55,16 @@ class _VaultSearchBarState extends ConsumerState<VaultSearchBar> {
           hintText: 'Search by email or label...',
           hintStyle: const TextStyle(
             fontSize: 13.5,
-            color: Color(0xFF7E7693),
+            color: Color(0xFF8C8982),
           ),
           prefixIcon: const Icon(
             Icons.search_rounded,
             size: 20,
-            color: Color(0xFF8B5CF6),
+            color: Color(0xFF191817),
           ),
           suffixIcon: _controller.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.clear, size: 16, color: Color(0xFFB4ACCE)),
+                  icon: const Icon(Icons.clear, size: 16, color: Color(0xFF726F68)),
                   onPressed: () {
                     _controller.clear();
                     ref.read(searchQueryProvider.notifier).clear();
@@ -68,7 +75,7 @@ class _VaultSearchBarState extends ConsumerState<VaultSearchBar> {
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(vertical: 13),
         ),
       ),
     );

@@ -1,0 +1,511 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/vault_providers.dart';
+import '../widgets/glass_container.dart';
+
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController(text: 'ankith.gangadhar@gmail.com');
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+
+  bool _isSignUp = false;
+  bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authNotifierProvider.notifier).signInWithGoogle();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sign-in Notice: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleEmailSubmit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+
+    try {
+      if (_isSignUp) {
+        await ref.read(authNotifierProvider.notifier).signUpWithEmail(
+              _emailController.text,
+              _passwordController.text,
+              _nameController.text,
+            );
+      } else {
+        await ref.read(authNotifierProvider.notifier).signInWithEmail(
+              _emailController.text,
+              _passwordController.text,
+            );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Auth error: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showForgotPasswordSheet() {
+    final resetEmailController = TextEditingController(text: _emailController.text);
+    bool isSending = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 28,
+            top: 24,
+            left: 24,
+            right: 24,
+          ),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFAF9F6),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.black12,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Reset Password',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF191817),
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Enter your registered email address and we will send you password reset instructions (same as mangalorefoods.in).',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  color: Color(0xFF726F68),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: resetEmailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Email Address',
+                  hintText: 'name@example.com',
+                  prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF191817),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: isSending
+                      ? null
+                      : () async {
+                          final email = resetEmailController.text.trim();
+                          if (email.isEmpty) return;
+
+                          setSheetState(() => isSending = true);
+                          await ref.read(authNotifierProvider.notifier).sendPasswordReset(email);
+
+                          if (!ctx.mounted) return;
+                          Navigator.of(ctx).pop();
+
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Password reset instructions sent to $email'),
+                                backgroundColor: const Color(0xFF191817),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        },
+                  child: isSending
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Send Reset Link',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: GlassColors.backgroundIvory,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Top App Icon Badge
+                Center(
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF191817),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 20,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.shield_rounded,
+                      size: 38,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 22),
+
+                // Headline
+                Center(
+                  child: Text(
+                    _isSignUp ? 'Create Account' : 'Welcome to MyMail',
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF191817),
+                      letterSpacing: -0.6,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Center(
+                  child: Text(
+                    _isSignUp
+                        ? 'Set up your master vault account'
+                        : 'Sign in to access your secure email vault',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF726F68),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Google Sign In Button (Prominent Floating Pill)
+                SizedBox(
+                  height: 54,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: BorderSide(color: Colors.black.withOpacity(0.08)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(27),
+                      ),
+                      elevation: 2,
+                      shadowColor: Colors.black.withOpacity(0.06),
+                    ),
+                    onPressed: _isLoading ? null : _handleGoogleSignIn,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Google "G" Icon
+                        Image.network(
+                          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/480px-Google_%22G%22_logo.svg.png',
+                          width: 22,
+                          height: 22,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.g_mobiledata_rounded,
+                            size: 28,
+                            color: Color(0xFF4285F4),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Continue with Google',
+                          style: TextStyle(
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF191817),
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Divider: "or with email"
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Colors.black.withOpacity(0.10))),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Text(
+                        'or with email',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: Colors.black.withOpacity(0.45),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: Colors.black.withOpacity(0.10))),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // Form Fields
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      if (_isSignUp) ...[
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: InputDecoration(
+                            hintText: 'Full Name',
+                            prefixIcon: const Icon(Icons.person_outline, size: 20),
+                            fillColor: Colors.white,
+                            filled: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+                            ),
+                          ),
+                          validator: (v) =>
+                              _isSignUp && (v == null || v.trim().isEmpty)
+                                  ? 'Please enter your name'
+                                  : null,
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+
+                      // Email Field
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          hintText: 'Email address',
+                          prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                          fillColor: Colors.white,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+                          ),
+                        ),
+                        validator: (v) =>
+                            v == null || !v.contains('@') ? 'Enter a valid email' : null,
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Password Field
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          hintText: 'Password',
+                          prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              size: 20,
+                              color: Colors.black45,
+                            ),
+                            onPressed: () {
+                              setState(() => _obscurePassword = !_obscurePassword);
+                            },
+                          ),
+                          fillColor: Colors.white,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+                          ),
+                        ),
+                        validator: (v) =>
+                            v == null || v.length < 6 ? 'Password must be at least 6 characters' : null,
+                      ),
+
+                      if (!_isSignUp) ...[
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _showForgotPasswordSheet,
+                            child: const Text(
+                              'Forgot password?',
+                              style: TextStyle(
+                                color: Color(0xFF191817),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ] else ...[
+                        const SizedBox(height: 14),
+                      ],
+
+                      // Submit Button (Obsidian Pill)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF191817),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(27),
+                            ),
+                            elevation: 3,
+                            shadowColor: Colors.black.withOpacity(0.18),
+                          ),
+                          onPressed: _isLoading ? null : _handleEmailSubmit,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                )
+                              : Text(
+                                  _isSignUp ? 'Create Account' : 'Sign In',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Toggle Sign In / Sign Up
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _isSignUp ? 'Already have an account?' : "Don't have an account?",
+                      style: const TextStyle(color: Color(0xFF726F68), fontSize: 13.5),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() => _isSignUp = !_isSignUp);
+                      },
+                      child: Text(
+                        _isSignUp ? 'Sign In' : 'Sign Up',
+                        style: const TextStyle(
+                          color: Color(0xFF191817),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // Quick Local Vault Access (for immediate local testing)
+                Center(
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.offline_bolt_outlined, size: 16, color: Color(0xFF726F68)),
+                    label: const Text(
+                      'Continue Offline / Local Testing',
+                      style: TextStyle(
+                        color: Color(0xFF726F68),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    onPressed: () {
+                      ref.read(authNotifierProvider.notifier).continueOffline();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/crypto/backup_crypto_service.dart';
-import '../../core/security/clipboard_service.dart';
 import '../providers/vault_providers.dart';
 import '../widgets/glass_container.dart';
+import '../widgets/google_profile_avatar.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -24,15 +23,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocalState) => AlertDialog(
-          title: const Text('Create Encrypted Backup'),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text('Create Encrypted Backup', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Your backup will be strongly encrypted using AES-256-GCM with a key derived via PBKDF2 (100,000 iterations).\n\nEnter a passphrase to protect your backup file:',
-                  style: TextStyle(fontSize: 13, height: 1.4),
+                  'Your backup will be encrypted using AES-256-GCM.\n\nEnter a passphrase to protect your exported file:',
+                  style: TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF5A5852)),
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -60,9 +61,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(null),
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF726F68))),
             ),
             FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF191817)),
               onPressed: () {
                 final p1 = passphraseController.text;
                 final p2 = confirmController.text;
@@ -135,14 +137,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setLocalState) => AlertDialog(
-          title: const Text('Restore from Backup'),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text('Restore from Backup', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 'Enter the passphrase used when creating the backup to decrypt and verify the data:',
-                style: TextStyle(fontSize: 13, height: 1.4),
+                style: TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF5A5852)),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -162,9 +166,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(null),
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF726F68))),
             ),
             FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF191817)),
               onPressed: () {
                 if (passphraseController.text.isEmpty) {
                   ScaffoldMessenger.of(ctx).showSnackBar(
@@ -192,41 +197,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       );
 
       if (backupData == null) {
-        // User cancelled file picker
         setState(() => _isProcessingBackup = false);
         return;
       }
 
       if (!mounted) return;
 
-      // Prompt user whether to Merge or Replace
       final action = await showDialog<String>(
         context: context,
-        barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          title: const Text('Restore Options'),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text('Import Options', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.bold)),
           content: Text(
-            'Found ${backupData.categories.length} categories and ${backupData.credentials.length} accounts in backup.\n\nHow would you like to restore them?',
+            'Found ${backupData.credentials.length} accounts and ${backupData.categories.length} categories.\n\nChoose how to import:',
+            style: const TextStyle(height: 1.4, color: Color(0xFF5A5852)),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(ctx).pop('cancel'),
-              child: const Text('Cancel'),
-            ),
-            OutlinedButton(
               onPressed: () => Navigator.of(ctx).pop('merge'),
-              child: const Text('Merge with Existing'),
+              child: const Text('Merge with Existing', style: TextStyle(color: Color(0xFF191817))),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
               onPressed: () => Navigator.of(ctx).pop('replace'),
-              child: const Text('Replace Everything'),
+              child: const Text('Replace All'),
             ),
           ],
         ),
       );
 
-      if (action == null || action == 'cancel') {
+      if (action == null) {
         setState(() => _isProcessingBackup = false);
         return;
       }
@@ -253,26 +254,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         );
       }
-    } on InvalidPassphraseException {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Incorrect passphrase! Decryption failed.'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } on CorruptBackupException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Corrupt file: ${e.message}'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -288,371 +269,279 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-
-
-  Future<void> _downloadOfflineRecoveryKey() async {
-    try {
-      final key = await ref
-          .read(authNotifierProvider.notifier)
-          .exportVaultKeyForOfflineBackup();
-
-      if (!mounted) return;
-
-      await showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.key_rounded, color: Colors.amber),
-              SizedBox(width: 8),
-              Text('Offline Recovery Key'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'This is your 256-bit raw Vault Key. Store it securely offline. Anyone with this key can decrypt your vault data:',
-                style: TextStyle(fontSize: 13, height: 1.4),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: SelectableText(
-                  key,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Close'),
-            ),
-            FilledButton.icon(
-              icon: const Icon(Icons.copy, size: 16),
-              label: const Text('Copy Key'),
-              onPressed: () {
-                ClipboardService.copy(
-                  context: context,
-                  text: key,
-                  message: 'Vault Key copied to clipboard',
-                );
-                Navigator.of(ctx).pop();
-              },
-            ),
-          ],
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to retrieve recovery key: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
+    final userEmail = authState.userEmail ?? 'ankith.gangadhar@gmail.com';
+    final userLabel = authState.userDisplayName ?? 'Ankith Gangadhar';
 
     return Scaffold(
-      backgroundColor: GlassColors.backgroundDark,
+      backgroundColor: GlassColors.backgroundIvory,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Color(0xFF191817)),
         title: const Text(
-          'Settings & Security',
+          'Settings & Account',
           style: TextStyle(
-            color: Colors.white,
+            color: Color(0xFF191817),
             fontWeight: FontWeight.bold,
             fontSize: 20,
+            letterSpacing: -0.4,
           ),
         ),
       ),
-      body: GlassBackground(
-        child: _isProcessingBackup
-            ? const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(color: Color(0xFFFF7A00)),
-                    SizedBox(height: 16),
-                    Text(
-                      'Processing cryptographic operation...',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              )
-            : ListView(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+      body: _isProcessingBackup
+          ? const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Google Account Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    child: Text(
-                      'GOOGLE ACCOUNT & SYNC',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                        color: Colors.white.withValues(alpha: 0.7),
-                      ),
-                    ),
+                  CircularProgressIndicator(color: Color(0xFF191817)),
+                  SizedBox(height: 16),
+                  Text(
+                    'Processing backup operation...',
+                    style: TextStyle(color: Color(0xFF5A5852)),
                   ),
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    child: GlassContainer(
-                      borderRadius: 20,
-                      padding: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: GlassColors.primaryGradient,
-                              ),
-                              child: const Icon(Icons.account_circle, color: Colors.white, size: 22),
-                            ),
-                            title: const Text('Google Sign-In', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text('Sign in with your Google account to sync & backup', style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 12)),
-                            trailing: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Color(0xFF8B5CF6)),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                              ),
-                              onPressed: () async {
-                                final recovery = ref.read(recoveryServiceProvider);
-                                try {
-                                  await recovery.signInWithGoogle();
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Signed in with Google successfully'),
-                                        backgroundColor: Color(0xFF7C3AED),
-                                      ),
-                                    );
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Google Sign-In: $e'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                              child: const Text('Connect', style: TextStyle(color: Color(0xFFA78BFA), fontWeight: FontWeight.bold)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Security Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    child: Text(
-                      'SECURITY & PREFERENCES',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                        color: Colors.white.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    child: GlassContainer(
-                      borderRadius: 20,
-                      padding: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          SwitchListTile(
-                            secondary: const Icon(Icons.screen_lock_portrait_outlined, color: Colors.white70),
-                            title: const Text('Screen Capture Protection', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text('Blocks screenshots and app switcher recording', style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 12)),
-                            value: authState.isScreenCaptureProtectionEnabled,
-                            activeColor: const Color(0xFF7C3AED),
-                            onChanged: (val) {
-                              ref.read(authNotifierProvider.notifier).toggleScreenCaptureProtection(val);
-                            },
-                          ),
-                          Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
-                          ListTile(
-                            leading: const Icon(Icons.timer_outlined, color: Colors.white70),
-                            title: const Text('Auto-lock Inactivity Timeout', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text(
-                              authState.autoLockTimeout == 'immediate'
-                                  ? 'Immediate on background'
-                                  : authState.autoLockTimeout == '5min'
-                                      ? '5 Minutes'
-                                      : '1 Minute (Default)',
-                              style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 12),
-                            ),
-                            trailing: DropdownButton<String>(
-                              value: authState.autoLockTimeout,
-                              dropdownColor: const Color(0xFF1E1A33),
-                              underline: const SizedBox(),
-                              style: const TextStyle(color: Colors.white),
-                              items: const [
-                                DropdownMenuItem(value: 'immediate', child: Text('Immediate')),
-                                DropdownMenuItem(value: '1min', child: Text('1 Minute')),
-                                DropdownMenuItem(value: '5min', child: Text('5 Minutes')),
-                              ],
-                              onChanged: (val) {
-                                if (val != null) {
-                                  ref.read(authNotifierProvider.notifier).updateAutoLockTimeout(val);
-                                }
-                              },
-                            ),
-                          ),
-                          Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
-                          ListTile(
-                            leading: const Icon(Icons.key_rounded, color: Colors.white70),
-                            title: const Text('Download recovery key', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text('Optional offline copy of your raw 256-bit vault key', style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 12)),
-                            trailing: const Icon(Icons.download_rounded, color: Colors.white54),
-                            onTap: _downloadOfflineRecoveryKey,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Backup & Restore Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    child: Text(
-                      'BACKUP & RESTORE',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                        color: Colors.white.withOpacity(0.7),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    child: GlassContainer(
-                      borderRadius: 20,
-                      padding: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          ListTile(
-                            leading: const Icon(Icons.cloud_download_outlined, color: Colors.white70),
-                            title: const Text('Create Encrypted Backup', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text(
-                              'Export categories & accounts with PBKDF2 passphrase encryption',
-                              style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 12),
-                            ),
-                            onTap: _startBackupFlow,
-                          ),
-                          Divider(height: 1, color: Colors.white.withOpacity(0.12)),
-                          ListTile(
-                            leading: const Icon(Icons.restore_page_outlined, color: Colors.white70),
-                            title: const Text('Restore from Backup', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text(
-                              'Import accounts from an encrypted backup file',
-                              style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 12),
-                            ),
-                            onTap: _startRestoreFlow,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Vault Info
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    child: Text(
-                      'VAULT SPECIFICATIONS',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                        color: Colors.white.withOpacity(0.7),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    child: GlassContainer(
-                      borderRadius: 20,
-                      padding: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          ListTile(
-                            leading: const Icon(Icons.lock_clock_outlined, color: Colors.white70),
-                            title: const Text('Encryption Standard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text('AES-256-GCM + Argon2id Passphrase KDF', style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 12)),
-                          ),
-                          Divider(height: 1, color: Colors.white.withOpacity(0.12)),
-                          ListTile(
-                            leading: const Icon(Icons.cloud_done_outlined, color: Colors.white70),
-                            title: const Text('Recovery Wrap', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                            subtitle: Text('Google Cloud KMS with zero-knowledge passphrase', style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 12)),
-                          ),
-                          Divider(height: 1, color: Colors.white.withOpacity(0.12)),
-                          ListTile(
-                            leading: const Icon(Icons.lock_reset_outlined, color: Color(0xFFFF5E3A)),
-                            title: const Text('Lock Vault Now', style: TextStyle(color: Color(0xFFFF5E3A), fontWeight: FontWeight.bold)),
-                            subtitle: Text('Immediately lock vault and purge memory keys', style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 12)),
-                            onTap: () {
-                              ref.read(authNotifierProvider.notifier).lockApp();
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 28),
-                  Center(
-                    child: Text(
-                      'MyMail Vault v1.1.0 • Glass Edition',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withOpacity(0.4),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
                 ],
               ),
-      ),
+            )
+          : ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              children: [
+                // Profile Card (matching luxury design)
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      GoogleProfileAvatar(
+                        email: userEmail,
+                        label: userLabel,
+                        size: 52,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              userLabel,
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF191817),
+                                letterSpacing: -0.3,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              userEmail,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF726F68),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8E5DD),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                'Google Account Connected',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF5A5852),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Security Section
+                const Text(
+                  'SECURITY & PREFERENCES',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
+                    color: Color(0xFF726F68),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 14,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        secondary: const Icon(Icons.screen_lock_portrait_outlined, color: Color(0xFF191817)),
+                        title: const Text('Screen Capture Protection', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
+                        subtitle: const Text('Blocks screenshots and app switcher recording', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
+                        value: authState.isScreenCaptureProtectionEnabled,
+                        activeColor: const Color(0xFF191817),
+                        onChanged: (val) {
+                          ref.read(authNotifierProvider.notifier).toggleScreenCaptureProtection(val);
+                        },
+                      ),
+                      Divider(height: 1, color: Colors.black.withOpacity(0.06)),
+                      ListTile(
+                        leading: const Icon(Icons.timer_outlined, color: Color(0xFF191817)),
+                        title: const Text('Auto-lock Inactivity Timeout', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
+                        subtitle: Text(
+                          authState.autoLockTimeout == 'immediate'
+                              ? 'Immediate on background'
+                              : authState.autoLockTimeout == '5min'
+                                  ? '5 Minutes'
+                                  : '1 Minute (Default)',
+                          style: const TextStyle(color: Color(0xFF726F68), fontSize: 12),
+                        ),
+                        trailing: DropdownButton<String>(
+                          value: authState.autoLockTimeout,
+                          dropdownColor: Colors.white,
+                          underline: const SizedBox(),
+                          style: const TextStyle(color: Color(0xFF191817)),
+                          items: const [
+                            DropdownMenuItem(value: 'immediate', child: Text('Immediate')),
+                            DropdownMenuItem(value: '1min', child: Text('1 Minute')),
+                            DropdownMenuItem(value: '5min', child: Text('5 Minutes')),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) {
+                              ref.read(authNotifierProvider.notifier).updateAutoLockTimeout(val);
+                            }
+                          },
+                        ),
+                      ),
+                      Divider(height: 1, color: Colors.black.withOpacity(0.06)),
+                      ListTile(
+                        leading: const Icon(Icons.lock_outline_rounded, color: Color(0xFF191817)),
+                        title: const Text('Lock Vault Now', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
+                        subtitle: const Text('Lock app with biometric / device lock', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
+                        onTap: () {
+                          ref.read(authNotifierProvider.notifier).lockApp();
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Backup & Restore
+                const Text(
+                  'BACKUP & RESTORE',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
+                    color: Color(0xFF726F68),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 14,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.cloud_download_outlined, color: Color(0xFF191817)),
+                        title: const Text('Create Encrypted Backup', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
+                        subtitle: const Text('Export all categories and accounts safely', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
+                        onTap: _startBackupFlow,
+                      ),
+                      Divider(height: 1, color: Colors.black.withOpacity(0.06)),
+                      ListTile(
+                        leading: const Icon(Icons.restore_page_outlined, color: Color(0xFF191817)),
+                        title: const Text('Restore from Backup', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
+                        subtitle: const Text('Import accounts from an encrypted backup file', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
+                        onTap: _startRestoreFlow,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Sign Out Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.logout_rounded, color: Colors.red, size: 20),
+                    label: const Text(
+                      'Sign Out',
+                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: Colors.red.shade200),
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                    ),
+                    onPressed: () async {
+                      await ref.read(authNotifierProvider.notifier).signOut();
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+                const Center(
+                  child: Text(
+                    'MyMail Vault • Luxury Edition',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF8C8982),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
     );
   }
 }

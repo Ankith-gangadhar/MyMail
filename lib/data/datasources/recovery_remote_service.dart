@@ -37,43 +37,76 @@ class RecoveryRemoteService {
 
   /// Signs in using Google Sign-In and Firebase Auth.
   Future<UserCredential> signInWithGoogle() async {
-    if (kIsWeb) {
-      try {
+    try {
+      if (kIsWeb) {
         final googleProvider = GoogleAuthProvider();
         googleProvider.addScope('email');
         googleProvider.addScope('profile');
         return await _auth.signInWithPopup(googleProvider);
-      } catch (e) {
-        // Fallback or rethrow clean message
-        if (e.toString().contains('popup-closed-by-user')) {
-          throw Exception('Sign-in cancelled by user');
-        }
-        rethrow;
       }
-    }
 
-    // Android / iOS native Google Sign-In
-    if (!_googleSignInInitialized) {
-      try {
-        await _googleSignIn.initialize();
-        _googleSignInInitialized = true;
-      } catch (e) {
-        if (e.toString().contains('already been called') ||
-            e.toString().contains('init()')) {
+      // Android / iOS native Google Sign-In
+      if (!_googleSignInInitialized) {
+        try {
+          await _googleSignIn.initialize();
           _googleSignInInitialized = true;
-        } else {
-          rethrow;
+        } catch (e) {
+          _googleSignInInitialized = true;
         }
       }
+
+      final account = await _googleSignIn.authenticate();
+      final auth = account.authentication;
+      final credential = GoogleAuthProvider.credential(
+        idToken: auth.idToken,
+      );
+
+      return await _auth.signInWithCredential(credential);
+    } catch (e) {
+      debugPrint('Google Sign-In caught error: $e');
+      rethrow;
     }
+  }
 
-    final account = await _googleSignIn.authenticate();
-    final auth = account.authentication;
-    final credential = GoogleAuthProvider.credential(
-      idToken: auth.idToken,
+  /// Signs in with standard Email and Password (matching mangalorefoods.in flow)
+  Future<UserCredential> signInWithEmail(String email, String password) async {
+    return await _auth.signInWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
     );
+  }
 
-    return await _auth.signInWithCredential(credential);
+  /// Creates a new account with Email and Password
+  Future<UserCredential> signUpWithEmail(
+    String email,
+    String password,
+    String displayName,
+  ) async {
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
+    if (credential.user != null && displayName.isNotEmpty) {
+      await credential.user!.updateDisplayName(displayName.trim());
+    }
+    return credential;
+  }
+
+  /// Sends password reset email (matching mangalorefoods.in forgot password flow)
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _auth.sendPasswordResetEmail(email: email.trim());
+  }
+
+  /// Signs out from all auth providers
+  Future<void> signOut() async {
+    try {
+      await _auth.signOut();
+    } catch (_) {}
+    try {
+      if (!kIsWeb) {
+        await _googleSignIn.signOut();
+      }
+    } catch (_) {}
   }
 
   /// Ensures user is signed in with Google, or triggers the sign-in flow.

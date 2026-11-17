@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/category_entity.dart';
 import '../providers/vault_providers.dart';
-import '../widgets/glass_container.dart';
 
 class CategoryManagementDialog extends ConsumerStatefulWidget {
   const CategoryManagementDialog({super.key});
@@ -25,39 +24,34 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF171427),
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderRadius: BorderRadius.circular(24),
         ),
-        title: const Text('Add Category', style: TextStyle(color: Colors.white)),
+        title: const Text('Add Category', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.bold)),
         content: TextField(
           controller: nameController,
           autofocus: true,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Color(0xFF191817)),
           decoration: InputDecoration(
             labelText: 'Category Name',
-            labelStyle: const TextStyle(color: Color(0xFFB4ACCE)),
             hintText: 'e.g. Finance, Shopping, Crypto',
-            hintStyle: const TextStyle(color: Color(0xFF7E7693)),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
+            filled: true,
+            fillColor: const Color(0xFFFAF9F6),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFFB4ACCE))),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF726F68))),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF7C3AED),
+              backgroundColor: const Color(0xFF191817),
             ),
             onPressed: () {
               final name = nameController.text.trim();
@@ -78,37 +72,33 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF171427),
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderRadius: BorderRadius.circular(24),
         ),
-        title: const Text('Rename Category', style: TextStyle(color: Colors.white)),
+        title: const Text('Rename Category', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.bold)),
         content: TextField(
           controller: nameController,
           autofocus: true,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Color(0xFF191817)),
           decoration: InputDecoration(
             labelText: 'New Name',
-            labelStyle: const TextStyle(color: Color(0xFFB4ACCE)),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
+            filled: true,
+            fillColor: const Color(0xFFFAF9F6),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFFB4ACCE))),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF726F68))),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF7C3AED),
+              backgroundColor: const Color(0xFF191817),
             ),
             onPressed: () {
               final newName = nameController.text.trim();
@@ -117,34 +107,31 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                 Navigator.of(ctx).pop();
               }
             },
-            child: const Text('Rename'),
+            child: const Text('Save'),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _deleteCategory(CategoryEntity category) async {
+  Future<void> _confirmDelete(CategoryEntity category) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF171427),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        title: Text('Delete "${category.name}"?', style: const TextStyle(color: Colors.white)),
-        content: const Text(
-          'Deleting this category will remove all accounts under it.',
-          style: TextStyle(color: Color(0xFFC4BED9)),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Delete Category', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.bold)),
+        content: Text(
+          'Are you sure you want to delete "${category.name}" and all its stored accounts?',
+          style: const TextStyle(color: Color(0xFF5A5852)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFFB4ACCE))),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF726F68))),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade600),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Delete'),
           ),
@@ -174,15 +161,14 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
     final categoriesAsync = ref.watch(categoriesProvider);
 
     return Dialog(
-      backgroundColor: const Color(0xFF171427),
+      backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
+        borderRadius: BorderRadius.circular(28),
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420, minWidth: 320),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -194,27 +180,30 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                   const Text(
                     'Manage Categories',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
+                      color: Color(0xFF191817),
+                      fontSize: 19,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: -0.3,
                     ),
                   ),
-                  IconButton(
-                    tooltip: 'Add Category',
-                    icon: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: GlassColors.primaryGradient,
-                      ),
-                      child: const Icon(Icons.add, size: 18, color: Colors.white),
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF191817),
                     ),
-                    onPressed: _showAddCategoryDialog,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      tooltip: 'Add Category',
+                      icon: const Icon(Icons.add, size: 20, color: Colors.white),
+                      onPressed: _showAddCategoryDialog,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Divider(color: Colors.white.withValues(alpha: 0.08)),
+              const SizedBox(height: 14),
+              Divider(color: Colors.black.withOpacity(0.06)),
 
               // Categories Reorderable List
               SizedBox(
@@ -225,7 +214,7 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                       return const Center(
                         child: Text(
                           'No categories available',
-                          style: TextStyle(color: Color(0xFF7E7693)),
+                          style: TextStyle(color: Color(0xFF8C8982)),
                         ),
                       );
                     }
@@ -233,7 +222,7 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                     return ReorderableListView.builder(
                       shrinkWrap: true,
                       itemCount: categories.length,
-                      onReorderItem: (oldIndex, newIndex) {
+                      onReorder: (oldIndex, newIndex) {
                         ref.read(categoriesProvider.notifier).reorderCategories(oldIndex, newIndex);
                       },
                       itemBuilder: (context, index) {
@@ -243,49 +232,48 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                         return Container(
                           key: ValueKey(cat.id),
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E1A33).withValues(alpha: 0.6),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+                            color: const Color(0xFFF4F3EE),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.black.withOpacity(0.04)),
                           ),
                           child: Row(
                             children: [
                               const Icon(
                                 Icons.drag_indicator_rounded,
-                                color: Color(0xFF7E7693),
+                                color: Color(0xFF8C8982),
                                 size: 20,
                               ),
                               const SizedBox(width: 12),
-                              // Expanded Title to prevent ANY vertical letter wrapping
                               Expanded(
                                 child: Text(
                                   cat.name,
                                   style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15,
+                                    color: Color(0xFF191817),
                                     fontWeight: FontWeight.w600,
+                                    fontSize: 15,
                                   ),
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              // Compact Rename Action
-                              IconButton(
-                                icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFFB4ACCE)),
-                                tooltip: 'Rename',
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () => _showRenameDialog(cat),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined, size: 19),
+                                    color: const Color(0xFF5A5852),
+                                    onPressed: () => _showRenameDialog(cat),
+                                  ),
+                                  if (!isDefault)
+                                    IconButton(
+                                      icon: const Icon(Icons.delete_outline, size: 19),
+                                      color: Colors.red.shade600,
+                                      onPressed: () => _confirmDelete(cat),
+                                    ),
+                                ],
                               ),
-                              // Compact Delete Action (for custom categories)
-                              if (!isDefault)
-                                IconButton(
-                                  icon: Icon(Icons.delete_outline, size: 18, color: Colors.red.shade300),
-                                  tooltip: 'Delete',
-                                  visualDensity: VisualDensity.compact,
-                                  onPressed: () => _deleteCategory(cat),
-                                )
-                              else
-                                const SizedBox(width: 32),
                             ],
                           ),
                         );
@@ -293,7 +281,7 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                     );
                   },
                   loading: () => const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF7C3AED)),
+                    child: CircularProgressIndicator(color: Color(0xFF191817)),
                   ),
                   error: (e, _) => Center(
                     child: Text('Error: $e', style: const TextStyle(color: Colors.red)),
@@ -301,17 +289,18 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerRight,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF7C3AED),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    backgroundColor: const Color(0xFF191817),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Done', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text('Done'),
                 ),
               ),
             ],

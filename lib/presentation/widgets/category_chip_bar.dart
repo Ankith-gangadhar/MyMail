@@ -1,9 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/category_entity.dart';
 import '../providers/vault_providers.dart';
-import 'glass_container.dart';
 
 class CategoryChipBar extends ConsumerWidget {
   final List<CategoryEntity> categories;
@@ -61,45 +59,40 @@ class CategoryChipBar extends ConsumerWidget {
 
     return Container(
       height: 44,
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
         itemCount: orderedList.length + 1,
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           if (index == orderedList.length) {
-            // Manage categories button
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Material(
-                  color: const Color(0xFF1E1A33).withValues(alpha: 0.7),
-                  child: InkWell(
+            // Manage/Edit categories button
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(22),
+                onTap: onManageCategories,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8E5DD),
                     borderRadius: BorderRadius.circular(22),
-                    onTap: onManageCategories,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.09)),
+                    border: Border.all(color: Colors.black.withOpacity(0.05)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.tune_rounded, size: 16, color: Color(0xFF5A5852)),
+                      SizedBox(width: 6),
+                      Text(
+                        'Edit',
+                        style: TextStyle(
+                          color: Color(0xFF5A5852),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.tune_rounded, size: 16, color: Color(0xFFC4BED9)),
-                          SizedBox(width: 6),
-                          Text(
-                            'Edit',
-                            style: TextStyle(
-                              color: Color(0xFFC4BED9),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    ],
                   ),
                 ),
               ),
@@ -109,52 +102,45 @@ class CategoryChipBar extends ConsumerWidget {
           final category = orderedList[index];
           final isSelected = selectedCategory == category.id;
 
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(22),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(22),
+              onTap: () {
+                if (isSelected) return;
+                ref.read(authNotifierProvider.notifier).recordActivity();
+                ref.read(selectedCategoryProvider.notifier).selectCategory(category.id);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white : const Color(0xFFE8E5DD),
                   borderRadius: BorderRadius.circular(22),
-                  onTap: () {
-                    if (isSelected) return;
-                    ref.read(authNotifierProvider.notifier).recordActivity();
-                    ref.read(selectedCategoryProvider.notifier).selectCategory(category.id);
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    decoration: BoxDecoration(
-                      gradient: isSelected ? GlassColors.primaryGradient : null,
-                      color: isSelected ? null : const Color(0xFF1C1830).withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFFA78BFA).withValues(alpha: 0.5)
-                            : Colors.white.withValues(alpha: 0.08),
-                        width: 1.1,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: const Color(0xFF7C3AED).withValues(alpha: 0.4),
-                                blurRadius: 12,
-                                offset: const Offset(0, 3),
-                              ),
-                            ]
-                          : [],
-                    ),
-                    child: Center(
-                      child: Text(
-                        category.name,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : const Color(0xFFB4ACCE),
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          fontSize: 13,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
+                  border: Border.all(
+                    color: isSelected
+                        ? Colors.black.withOpacity(0.08)
+                        : Colors.transparent,
+                    width: 1,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : [],
+                ),
+                child: Center(
+                  child: Text(
+                    category.name,
+                    style: TextStyle(
+                      color: isSelected ? const Color(0xFF191817) : const Color(0xFF6E6B65),
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontSize: 13.5,
+                      letterSpacing: -0.1,
                     ),
                   ),
                 ),

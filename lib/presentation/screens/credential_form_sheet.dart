@@ -25,7 +25,7 @@ class CredentialFormSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF130F22),
+      backgroundColor: const Color(0xFFFAF9F6),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -139,20 +139,20 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
 
     final inputDecoration = InputDecoration(
       filled: true,
-      fillColor: const Color(0xFF171427),
-      labelStyle: const TextStyle(color: Color(0xFFB4ACCE)),
-      hintStyle: const TextStyle(color: Color(0xFF7E7693)),
+      fillColor: Colors.white,
+      labelStyle: const TextStyle(color: Color(0xFF726F68), fontSize: 13.5),
+      hintStyle: const TextStyle(color: Color(0xFF8C8982), fontSize: 13.5),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 1.5),
+        borderSide: const BorderSide(color: Color(0xFF191817), width: 1.5),
       ),
     );
 
@@ -195,41 +195,48 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
                       Text(
                         isEditing ? 'Edit Account' : 'Add Account',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFF191817),
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.3,
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Category: ${currentCat.name}',
-                        style: const TextStyle(
-                          color: Color(0xFFA78BFA),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8E5DD),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Category: ${currentCat.name}',
+                          style: const TextStyle(
+                            color: Color(0xFF5A5852),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Color(0xFFB4ACCE)),
+                    icon: const Icon(Icons.close, color: Color(0xFF726F68)),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
               // Email Input
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 autocorrect: false,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Color(0xFF191817)),
                 decoration: inputDecoration.copyWith(
                   labelText: 'Email ID *',
                   hintText: 'user@gmail.com',
-                  prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFFA78BFA)),
+                  prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF191817)),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -247,17 +254,17 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Color(0xFF191817)),
                 decoration: inputDecoration.copyWith(
                   labelText: 'Password *',
-                  prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFA78BFA)),
+                  prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF191817)),
                   suffixIcon: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                          color: const Color(0xFFB4ACCE),
+                          color: const Color(0xFF726F68),
                         ),
                         onPressed: () {
                           setState(() {
@@ -267,7 +274,7 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
                       ),
                       IconButton(
                         tooltip: 'Generate Strong Password',
-                        icon: const Icon(Icons.auto_fix_high_rounded, color: Color(0xFFA78BFA)),
+                        icon: const Icon(Icons.auto_fix_high_rounded, color: Color(0xFF191817)),
                         onPressed: _generateStrongPassword,
                       ),
                     ],
@@ -282,36 +289,48 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
               ),
               const SizedBox(height: 16),
 
-              // Optional Label Input (e.g. Mangalore Store, Google Workspace)
+              // Optional Label Input
               TextFormField(
                 controller: _labelController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Color(0xFF191817)),
                 decoration: inputDecoration.copyWith(
                   labelText: 'Label or Account Name (Optional)',
                   hintText: 'e.g. Mangalore Store, Google Workspace',
-                  prefixIcon: const Icon(Icons.tag_outlined, color: Color(0xFFA78BFA)),
+                  prefixIcon: const Icon(Icons.tag_outlined, color: Color(0xFF191817)),
                 ),
               ),
               const SizedBox(height: 26),
 
-              // Save Action Button with Gradient
-              GlassGradientButton(
-                onPressed: _isSaving ? null : _save,
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                      )
-                    : Text(
-                        isEditing ? 'Save Changes' : 'Save Account',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
+              // Save Action Button
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF191817),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                    elevation: 2,
+                  ),
+                  onPressed: _isSaving ? null : _save,
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                        )
+                      : Text(
+                          isEditing ? 'Save Changes' : 'Save Account',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.2,
+                          ),
                         ),
-                      ),
+                ),
               ),
             ],
           ),

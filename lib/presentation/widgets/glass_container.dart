@@ -1,58 +1,82 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
-/// Global color palette inspired by Capi Product smart home dark UI
+/// Global luxury color palette inspired by the high-end luxury booking & hotel design
+/// Soft warm ivory/sand canvas, obsidian charcoal cards, and clean rounded pill geometry
 class GlassColors {
-  static const Color backgroundDark = Color(0xFF0C0A15);
-  static const Color backgroundDeep = Color(0xFF130F22);
-  static const Color cardDark = Color(0xFF171427);
-  static const Color cardDarkElevated = Color(0xFF1E1A34);
+  // Luxury Warm Ivory Canvas
+  static const Color backgroundIvory = Color(0xFFF4F3EE);
+  static const Color backgroundIvoryLight = Color(0xFFFAF9F6);
+  static const Color backgroundIvorySurface = Color(0xFFEBE8E1);
 
-  // Atmospheric Violet & Indigo Illumination
-  static const Color orbViolet = Color(0xFF7C3AED);
-  static const Color orbIndigo = Color(0xFF4F46E5);
-  static const Color orbDeepPurple = Color(0xFF3B1C6E);
-  static const Color orbMagenta = Color(0xFF831843);
+  // Legacy alias for backwards compatibility
+  static const Color backgroundDark = Color(0xFFF4F3EE);
+  static const Color backgroundDeep = Color(0xFFEBE8E1);
 
-  // Primary Electric Violet Gradient (matching Capi Product UI)
+  // Obsidian Charcoal for Cards & Dark Elements
+  static const Color cardDark = Color(0xFF1E1E1E);
+  static const Color cardDarkElevated = Color(0xFF262524);
+  static const Color cardObsidian = Color(0xFF1E1E1E);
+
+  // Typography
+  static const Color textDark = Color(0xFF191817);
+  static const Color textMuted = Color(0xFF726F68);
+  static const Color textLight = Colors.white;
+  static const Color textSilver = Color(0xFFD5D3CB);
+
+  // Warm Champagne Gold & Bronze Accents
+  static const Color accentGold = Color(0xFFD4A373);
+  static const Color accentWarmBronze = Color(0xFFC59B6D);
+
+  // Primary Obsidian Jet Black Gradient
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF8B5CF6),
-      Color(0xFF6D28D9),
+      Color(0xFF2A2928),
+      Color(0xFF161514),
     ],
   );
 
-  // Secondary Accent Gradient (Violet to Magenta)
+  // Luxury Warm Champagne Gold Gradient
+  static const LinearGradient goldGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFFDFB78B),
+      Color(0xFFC3965E),
+    ],
+  );
+
+  // Legacy alias
   static const LinearGradient purpleGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFFA855F7),
-      Color(0xFF7C3AED),
+      Color(0xFF2A2928),
+      Color(0xFF161514),
     ],
   );
 
-  // Subtle Indigo/Slate Gradient for inactive/secondary surfaces
+  // Inactive surface gradient
   static const LinearGradient surfaceGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF1F1A35),
-      Color(0xFF161327),
+      Color(0xFFEDEAE2),
+      Color(0xFFE4E0D7),
     ],
   );
 
   // Glass borders and fills
-  static Color glassFill = const Color(0xFF171427).withValues(alpha: 0.85);
-  static Color glassFillLight = const Color(0xFF221C38).withValues(alpha: 0.70);
-  static Color glassBorder = Colors.white.withValues(alpha: 0.08);
-  static Color glassBorderSubtle = Colors.white.withValues(alpha: 0.04);
-  static Color glassBorderActive = const Color(0xFF8B5CF6).withValues(alpha: 0.45);
+  static Color glassFill = const Color(0xFF1E1E1E);
+  static Color glassFillLight = const Color(0xFFFFFFFF);
+  static Color glassBorder = Colors.black.withValues(alpha: 0.06);
+  static Color glassBorderSubtle = Colors.black.withValues(alpha: 0.04);
+  static Color glassBorderActive = const Color(0xFF191817);
 }
 
-/// GlassBackground renders the deep midnight canvas with atmospheric violet & indigo glows
+/// GlassBackground renders the soft warm luxury ivory canvas with subtle organic ambient depth
 class GlassBackground extends StatelessWidget {
   final Widget child;
 
@@ -61,13 +85,33 @@ class GlassBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: GlassColors.backgroundDark,
+      color: GlassColors.backgroundIvory,
       child: Stack(
         children: [
-          // Top right subtle electric violet atmospheric glow
+          // Soft warm organic radial gradient in top right
           Positioned(
-            top: -40,
-            right: -30,
+            top: -60,
+            right: -40,
+            child: Container(
+              width: 340,
+              height: 340,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFFEBE5D8).withValues(alpha: 0.8),
+                    const Color(0xFFF4F3EE).withValues(alpha: 0.0),
+                  ],
+                  stops: const [0.0, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // Lower left warm sand glow
+          Positioned(
+            bottom: 40,
+            left: -80,
             child: Container(
               width: 320,
               height: 320,
@@ -75,29 +119,8 @@ class GlassBackground extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF7C3AED).withValues(alpha: 0.28),
-                    const Color(0xFF4F46E5).withValues(alpha: 0.12),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.45, 1.0],
-                ),
-              ),
-            ),
-          ),
-
-          // Upper left deep indigo ambient light
-          Positioned(
-            top: 140,
-            left: -80,
-            child: Container(
-              width: 260,
-              height: 260,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF4338CA).withValues(alpha: 0.22),
-                    Colors.transparent,
+                    const Color(0xFFECE6DA).withValues(alpha: 0.7),
+                    const Color(0xFFF4F3EE).withValues(alpha: 0.0),
                   ],
                   stops: const [0.0, 1.0],
                 ),
@@ -105,48 +128,7 @@ class GlassBackground extends StatelessWidget {
             ),
           ),
 
-          // Center-right deep purple haze
-          Positioned(
-            top: 360,
-            right: -60,
-            child: Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF6D28D9).withValues(alpha: 0.20),
-                    const Color(0xFF831843).withValues(alpha: 0.08),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.5, 1.0],
-                ),
-              ),
-            ),
-          ),
-
-          // Bottom subtle violet glow
-          Positioned(
-            bottom: -60,
-            left: 20,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF581C87).withValues(alpha: 0.22),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 1.0],
-                ),
-              ),
-            ),
-          ),
-
-          // Content overlay with subtle blur to blend lights
+          // Content overlay
           SafeArea(child: child),
         ],
       ),
@@ -154,7 +136,7 @@ class GlassBackground extends StatelessWidget {
   }
 }
 
-/// Frosted dark glass container with subtle border and blur
+/// Luxury obsidian charcoal card with rounded geometry
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final double? width;
@@ -174,7 +156,7 @@ class GlassContainer extends StatelessWidget {
     this.height,
     this.padding,
     this.margin,
-    this.borderRadius = 22,
+    this.borderRadius = 24,
     this.blur = 16,
     this.borderColor,
     this.backgroundColor,
@@ -188,12 +170,19 @@ class GlassContainer extends StatelessWidget {
       height: height,
       padding: padding ?? const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: backgroundColor ?? GlassColors.glassFill,
+        color: backgroundColor ?? GlassColors.cardObsidian,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: borderColor ?? GlassColors.glassBorder,
-          width: 1.1,
+          color: borderColor ?? Colors.black.withValues(alpha: 0.06),
+          width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: child,
     );
@@ -214,16 +203,13 @@ class GlassContainer extends StatelessWidget {
       margin: margin,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: content,
-        ),
+        child: content,
       ),
     );
   }
 }
 
-/// Electric violet gradient button
+/// Luxury Obsidian Black / Champagne Gold button
 class GlassGradientButton extends StatelessWidget {
   final Widget child;
   final VoidCallback? onPressed;
@@ -238,7 +224,7 @@ class GlassGradientButton extends StatelessWidget {
     required this.onPressed,
     this.height = 54,
     this.width,
-    this.borderRadius = 27,
+    this.borderRadius = 28,
     this.gradient,
   });
 
@@ -249,8 +235,8 @@ class GlassGradientButton extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         gradient: onPressed == null
-            ? LinearGradient(
-                colors: [Colors.grey.shade800, Colors.grey.shade900],
+            ? const LinearGradient(
+                colors: [Color(0xFF88857F), Color(0xFF6B6862)],
               )
             : (gradient ?? GlassColors.primaryGradient),
         borderRadius: BorderRadius.circular(borderRadius),
@@ -258,9 +244,9 @@ class GlassGradientButton extends StatelessWidget {
             ? []
             : [
                 BoxShadow(
-                  color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 14,
+                  offset: const Offset(0, 5),
                 ),
               ],
       ),

@@ -46,33 +46,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
 
-    // Warning & confirmation Dialog
+    // Confirmation Dialog
     final proceed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF171427),
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderRadius: BorderRadius.circular(24),
         ),
         title: const Row(
           children: [
-            Icon(Icons.share_rounded, color: Color(0xFFA78BFA), size: 24),
-            SizedBox(width: 8),
-            Text('Export & Share', style: TextStyle(color: Colors.white)),
+            Icon(Icons.share_rounded, color: Color(0xFF191817), size: 24),
+            SizedBox(width: 10),
+            Text('Export & Share', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.bold)),
           ],
         ),
         content: Text(
           'Export "${category.name}" credentials (${credentials.length} accounts) to an Excel file and share?',
-          style: const TextStyle(height: 1.4, color: Color(0xFFC4BED9)),
+          style: const TextStyle(height: 1.4, color: Color(0xFF5A5852)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFFB4ACCE))),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF726F68))),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF7C3AED)),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF191817)),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Share Now'),
           ),
@@ -82,7 +81,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     if (proceed != true) return;
 
-    // Generate Excel and Share directly (no extra biometric prompt needed)
     try {
       final exportService = ref.read(exportImportServiceProvider);
       await exportService.shareCategoryAsExcel(
@@ -106,23 +104,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF171427),
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderRadius: BorderRadius.circular(24),
         ),
-        title: const Text('Delete Account', style: TextStyle(color: Colors.white)),
+        title: const Text('Delete Account', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.bold)),
         content: Text(
           'Are you sure you want to delete the account "${cred.email}"?',
-          style: const TextStyle(color: Color(0xFFC4BED9)),
+          style: const TextStyle(color: Color(0xFF5A5852)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFFB4ACCE))),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF726F68))),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade600),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Delete'),
           ),
@@ -145,6 +142,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authNotifierProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
     final selectedCategoryId = ref.watch(selectedCategoryProvider);
     final filteredCredentials = ref.watch(filteredCredentialsProvider);
@@ -161,70 +159,137 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
 
-    final isPersonalCategory = currentCategory != null &&
-        (currentCategory.id == 'cat_personal' ||
-            currentCategory.name.trim().toLowerCase() == 'personal');
+    final userEmail = authState.userEmail ?? 'ankith.gangadhar@gmail.com';
+    final userLabel = authState.userDisplayName ?? 'Ankith Gangadhar';
 
     return Scaffold(
-      backgroundColor: GlassColors.backgroundDark,
+      backgroundColor: GlassColors.backgroundIvory,
       extendBodyBehindAppBar: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        titleSpacing: 20,
         title: Row(
           children: [
             InkWell(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(22),
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const SettingsScreen()),
                 );
               },
-              child: const GoogleProfileAvatar(
-                email: 'ankith.gangadhar@gmail.com',
-                label: 'Ankith Gangadhar',
-                size: 36,
+              child: GoogleProfileAvatar(
+                email: userEmail,
+                label: userLabel,
+                size: 38,
               ),
             ),
             const SizedBox(width: 12),
             const Text(
               'MyMail',
               style: TextStyle(
-                color: Colors.white,
+                color: Color(0xFF191817),
                 fontWeight: FontWeight.bold,
-                fontSize: 19,
-                letterSpacing: 0.2,
+                fontSize: 20,
+                letterSpacing: -0.4,
               ),
             ),
           ],
         ),
         actions: [
-          // Share Category action
-          IconButton(
-            tooltip: 'Export & Share (${currentCategory?.name ?? "Category"})',
-            icon: const Icon(Icons.share_outlined, color: Colors.white70),
-            onPressed: () {
-              if (currentCategory != null) {
-                final allCredentials = credentialsAsync.value ?? [];
-                _shareCurrentCategory(currentCategory, allCredentials);
-              }
-            },
+          // Circular White Pill for Share
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              border: Border.all(color: Colors.black.withOpacity(0.06)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              tooltip: 'Export & Share (${currentCategory?.name ?? "Category"})',
+              icon: const Icon(Icons.share_outlined, color: Color(0xFF191817), size: 18),
+              onPressed: () {
+                if (currentCategory != null) {
+                  final allCredentials = credentialsAsync.value ?? [];
+                  _shareCurrentCategory(currentCategory, allCredentials);
+                }
+              },
+            ),
           ),
-          // Quick Lock Button - side by side with Share
-          IconButton(
-            tooltip: 'Lock Vault',
-            icon: const Icon(Icons.lock_outline, color: Colors.white70),
-            onPressed: () {
-              ref.read(authNotifierProvider.notifier).lockApp();
-            },
+          const SizedBox(width: 8),
+
+          // Circular White Pill for Lock
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              border: Border.all(color: Colors.black.withOpacity(0.06)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              tooltip: 'Lock Vault',
+              icon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF191817), size: 18),
+              onPressed: () {
+                ref.read(authNotifierProvider.notifier).lockApp();
+              },
+            ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 16),
         ],
       ),
       body: GlassBackground(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Categories Chip Bar
+            // Hero Title matching Screen 3 of Booking App
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 10, 22, 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'All Your Passwords',
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF191817),
+                      letterSpacing: -0.6,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${filteredCredentials.length} accounts secured in ${currentCategory?.name ?? "Vault"}',
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: Color(0xFF726F68),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // Categories Chip Bar (Pill Chips)
             categoriesAsync.when(
               data: (categories) => CategoryChipBar(
                 categories: categories,
@@ -266,7 +331,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
 
-            // Search Bar
+            // Search Bar (White Rounded Pill)
             const VaultSearchBar(),
 
             // Accounts List
@@ -277,47 +342,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: GlassContainer(
-                          borderRadius: 24,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(26),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                width: 72,
-                                height: 72,
-                                decoration: BoxDecoration(
+                                width: 68,
+                                height: 68,
+                                decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  gradient: GlassColors.primaryGradient,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
-                                      blurRadius: 16,
-                                    ),
-                                  ],
+                                  color: Color(0xFF191817),
                                 ),
                                 child: const Icon(
                                   Icons.mail_lock_outlined,
-                                  size: 36,
+                                  size: 34,
                                   color: Colors.white,
                                 ),
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 18),
                               Text(
                                 'No accounts in ${currentCategory?.name ?? 'category'}',
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: Color(0xFF191817),
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              Text(
-                                'Tap the "+" button below to store your first email ID and password securely in your encrypted vault.',
+                              const Text(
+                                'Tap the "+" button below to store your first email ID and password securely in your vault.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Colors.white.withOpacity(0.65),
+                                  color: Color(0xFF726F68),
                                   height: 1.4,
                                 ),
                               ),
@@ -330,22 +399,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   if (filteredCredentials.isEmpty) {
                     return Center(
-                      child: GlassContainer(
-                        borderRadius: 20,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                        child: Column(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        child: const Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.search_off_rounded,
-                              size: 44,
-                              color: Colors.white60,
+                              size: 40,
+                              color: Color(0xFF8C8982),
                             ),
-                            const SizedBox(height: 12),
-                            const Text(
+                            SizedBox(height: 10),
+                            Text(
                               'No matching accounts found',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: Color(0xFF191817),
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -357,7 +429,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   }
 
                   return ListView.builder(
-                    padding: const EdgeInsets.only(top: 4, bottom: 90),
+                    padding: const EdgeInsets.only(top: 4, bottom: 96),
                     itemCount: filteredCredentials.length,
                     itemBuilder: (context, index) {
                       final credential = filteredCredentials[index];
@@ -376,12 +448,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   );
                 },
                 loading: () => const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFFF7A00)),
+                  child: CircularProgressIndicator(color: Color(0xFF191817)),
                 ),
                 error: (err, _) => Center(
                   child: Text(
                     'Error loading accounts: $err',
-                    style: const TextStyle(color: Colors.white70),
+                    style: const TextStyle(color: Color(0xFF726F68)),
                   ),
                 ),
               ),
@@ -390,14 +462,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
       floatingActionButton: Container(
-        height: 56,
-        width: 56,
+        height: 58,
+        width: 58,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: GlassColors.primaryGradient,
+          color: const Color(0xFF191817),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF7C3AED).withValues(alpha: 0.45),
+              color: Colors.black.withOpacity(0.20),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
@@ -413,7 +485,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 initialCategoryId: selectedCategoryId,
               );
             },
-            child: const Icon(Icons.add, size: 30, color: Colors.white),
+            child: const Icon(Icons.add_rounded, size: 30, color: Colors.white),
           ),
         ),
       ),

@@ -88,7 +88,7 @@ class GoogleProfileAvatar extends StatelessWidget {
       alignment: Alignment.center,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: GlassColors.primaryGradient,
+        color: Color(0xFF191817),
       ),
       child: Text(
         initials,
@@ -97,9 +97,6 @@ class GoogleProfileAvatar extends StatelessWidget {
           fontWeight: FontWeight.bold,
           fontSize: size * 0.40,
           letterSpacing: 0.5,
-          shadows: const [
-            Shadow(color: Colors.black45, blurRadius: 4),
-          ],
         ),
       ),
     );
@@ -121,14 +118,14 @@ class GoogleProfileAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
-            blurRadius: 10,
-            spreadRadius: 1,
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.20),
-          width: 1.4,
+          color: Colors.black.withOpacity(0.08),
+          width: 1.2,
         ),
       ),
       child: ClipOval(child: avatarContent),
