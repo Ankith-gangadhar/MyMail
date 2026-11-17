@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/crypto/vault_key_wrapping_service.dart';
 import '../../core/security/biometric_service.dart';
 import '../../core/security/key_storage_service.dart';
@@ -6,6 +8,7 @@ import '../../core/security/screen_protection_service.dart';
 import '../../data/datasources/export_import_service.dart';
 import '../../data/datasources/local_database.dart';
 import '../../data/datasources/recovery_remote_service.dart';
+import '../../data/datasources/supabase_auth_service.dart';
 import '../../data/repositories/vault_repository_impl.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/credential_entity.dart';
@@ -36,6 +39,10 @@ final vaultKeyWrappingServiceProvider = Provider<VaultKeyWrappingService>((ref) 
 
 final recoveryServiceProvider = Provider<RecoveryRemoteService>((ref) {
   return RecoveryRemoteService();
+});
+
+final supabaseAuthServiceProvider = Provider<SupabaseAuthService>((ref) {
+  return SupabaseAuthService();
 });
 
 final vaultRepositoryProvider = Provider<VaultRepository>((ref) {
@@ -109,25 +116,27 @@ class AuthNotifier extends Notifier<AuthState> {
   late final BiometricService _biometricService;
   late final KeyStorageService _keyStorageService;
   late final RecoveryRemoteService _recoveryService;
+  late final SupabaseAuthService _supabaseAuthService;
 
   @override
   AuthState build() {
     _biometricService = ref.read(biometricServiceProvider);
     _keyStorageService = ref.read(keyStorageServiceProvider);
     _recoveryService = ref.read(recoveryServiceProvider);
+    _supabaseAuthService = ref.read(supabaseAuthServiceProvider);
 
     // Initial check
     Future.microtask(() => initialize());
 
     return AuthState(
-      status: AuthStatus.authenticated,
+      status: AuthStatus.unauthenticated,
       autoLockTimeout: '5min',
       unlockedCategoryIds: {'cat_work', 'cat_personal', 'cat_business'},
       lastActiveTime: DateTime.now(),
       isScreenCaptureProtectionEnabled: false,
-      userEmail: 'ankith.gangadhar@gmail.com',
-      userDisplayName: 'Ankith Gangadhar',
-      isSignedIn: true,
+      userEmail: null,
+      userDisplayName: null,
+      isSignedIn: false,
     );
   }
 
@@ -136,108 +145,126 @@ class AuthNotifier extends Notifier<AuthState> {
     final screenCaptureEnabled = await _keyStorageService.getScreenCaptureProtectionEnabled();
     await ScreenProtectionService.setProtection(screenCaptureEnabled);
 
-    final currentUser = _recoveryService.currentUser;
+    // 1. Check if returning from Google OAuth redirect on Web (hash fragment has access_token)
+    if (kIsWeb) {
+      final fragment = Uri.base.fragment;
+      if (fragment.isNotEmpty && fragment.contains('access_token=')) {
+        final webSession = await _supabaseAuthService.checkUrlFragmentSession(fragment);
+        if (webSession != null) {
+          state = state.copyWith(
+            status: AuthStatus.authenticated,
+            autoLockTimeout: timeout,
+            unlockedCategoryIds: {'cat_work', 'cat_personal', 'cat_business'},
+            isScreenCaptureProtectionEnabled: screenCaptureEnabled,
+            userEmail: webSession.email,
+            userDisplayName: webSession.displayName ?? webSession.email.split('@').first,
+            userPhotoUrl: webSession.avatarUrl,
+            isSignedIn: true,
+            lastActiveTime: DateTime.now(),
+          );
+          return;
+        }
+      }
+    }
 
+    // 2. Check if a previously authenticated Supabase session is stored locally
+    final session = await _supabaseAuthService.restoreSession();
+    if (session != null) {
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        autoLockTimeout: timeout,
+        unlockedCategoryIds: {'cat_work', 'cat_personal', 'cat_business'},
+        isScreenCaptureProtectionEnabled: screenCaptureEnabled,
+        userEmail: session.email,
+        userDisplayName: session.displayName ?? session.email.split('@').first,
+        userPhotoUrl: session.avatarUrl,
+        isSignedIn: true,
+        lastActiveTime: DateTime.now(),
+      );
+      return;
+    }
+
+    // 3. Unauthenticated state
     state = state.copyWith(
-      status: AuthStatus.authenticated,
+      status: AuthStatus.unauthenticated,
       autoLockTimeout: timeout,
       unlockedCategoryIds: {'cat_work', 'cat_personal', 'cat_business'},
       isScreenCaptureProtectionEnabled: screenCaptureEnabled,
-      userEmail: currentUser?.email ?? 'ankith.gangadhar@gmail.com',
-      userDisplayName: currentUser?.displayName ?? 'Ankith Gangadhar',
-      userPhotoUrl: currentUser?.photoURL,
+      isSignedIn: false,
+      userEmail: null,
+      userDisplayName: null,
+      lastActiveTime: DateTime.now(),
+    );
+  }
+
+  /// Sign In with Google via Supabase OAuth (matching mangalorefoods.in flow)
+  Future<void> signInWithGoogle() async {
+    final authUrl = _supabaseAuthService.getGoogleOAuthUrl();
+    final uri = Uri.parse(authUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
+        webOnlyWindowName: '_self',
+      );
+    } else {
+      throw SupabaseAuthException('Could not launch Google authentication page.');
+    }
+  }
+
+  /// Sign In with Email & Password (verified against Supabase Auth)
+  Future<void> signInWithEmail(String email, String password) async {
+    final session = await _supabaseAuthService.signInWithPassword(
+      email: email,
+      password: password,
+    );
+
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      userEmail: session.email,
+      userDisplayName: session.displayName ?? session.email.split('@').first,
+      userPhotoUrl: session.avatarUrl,
       isSignedIn: true,
       lastActiveTime: DateTime.now(),
     );
   }
 
-  /// Sign In with Google (one-click with fallback for seamless local testing)
-  Future<void> signInWithGoogle() async {
-    try {
-      final cred = await _recoveryService.signInWithGoogle();
-      final user = cred.user;
-      state = state.copyWith(
-        status: AuthStatus.authenticated,
-        userEmail: user?.email ?? 'ankith.gangadhar@gmail.com',
-        userDisplayName: user?.displayName ?? 'Ankith Gangadhar',
-        userPhotoUrl: user?.photoURL,
-        isSignedIn: true,
-        lastActiveTime: DateTime.now(),
-      );
-    } catch (e) {
-      // Graceful fallback for local development / testing without Firebase keys
-      state = state.copyWith(
-        status: AuthStatus.authenticated,
-        userEmail: 'ankith.gangadhar@gmail.com',
-        userDisplayName: 'Ankith Gangadhar',
-        isSignedIn: true,
-        lastActiveTime: DateTime.now(),
-      );
-    }
-  }
-
-  /// Sign In with Email & Password (matching mangalorefoods.in flow)
-  Future<void> signInWithEmail(String email, String password) async {
-    try {
-      final cred = await _recoveryService.signInWithEmail(email, password);
-      final user = cred.user;
-      state = state.copyWith(
-        status: AuthStatus.authenticated,
-        userEmail: user?.email ?? email,
-        userDisplayName: user?.displayName ?? email.split('@').first,
-        userPhotoUrl: user?.photoURL,
-        isSignedIn: true,
-        lastActiveTime: DateTime.now(),
-      );
-    } catch (e) {
-      // Local testing fallback if Firebase offline
-      state = state.copyWith(
-        status: AuthStatus.authenticated,
-        userEmail: email,
-        userDisplayName: email.split('@').first,
-        isSignedIn: true,
-        lastActiveTime: DateTime.now(),
-      );
-    }
-  }
-
-  /// Create Account with Email & Password
+  /// Create Account with Email & Password (stored in Supabase Auth)
   Future<void> signUpWithEmail(String email, String password, String name) async {
-    try {
-      final cred = await _recoveryService.signUpWithEmail(email, password, name);
-      final user = cred.user;
-      state = state.copyWith(
-        status: AuthStatus.authenticated,
-        userEmail: user?.email ?? email,
-        userDisplayName: name.isNotEmpty ? name : email.split('@').first,
-        userPhotoUrl: user?.photoURL,
-        isSignedIn: true,
-        lastActiveTime: DateTime.now(),
-      );
-    } catch (e) {
-      state = state.copyWith(
-        status: AuthStatus.authenticated,
-        userEmail: email,
-        userDisplayName: name.isNotEmpty ? name : email.split('@').first,
-        isSignedIn: true,
-        lastActiveTime: DateTime.now(),
-      );
-    }
+    final session = await _supabaseAuthService.signUp(
+      email: email,
+      password: password,
+      name: name,
+    );
+
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      userEmail: session.email,
+      userDisplayName: session.displayName ?? (name.isNotEmpty ? name : session.email.split('@').first),
+      userPhotoUrl: session.avatarUrl,
+      isSignedIn: true,
+      lastActiveTime: DateTime.now(),
+    );
   }
 
-  /// Forgot Password flow: sends reset instructions to the given email
+  /// Forgot Password flow: sends reset instructions via Supabase
   Future<void> sendPasswordReset(String email) async {
-    try {
-      await _recoveryService.sendPasswordResetEmail(email);
-    } catch (_) {}
+    await _supabaseAuthService.sendPasswordReset(email);
   }
 
-  /// Sign Out: returns to the login screen
+  /// Sign Out: clears session and returns to login screen
   Future<void> signOut() async {
-    await _recoveryService.signOut();
+    await _supabaseAuthService.clearSession();
+    try {
+      await _recoveryService.signOut();
+    } catch (_) {}
+
     state = state.copyWith(
       status: AuthStatus.unauthenticated,
       isSignedIn: false,
+      userEmail: null,
+      userDisplayName: null,
+      userPhotoUrl: null,
     );
   }
 

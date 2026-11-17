@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/datasources/supabase_auth_service.dart';
 import '../providers/vault_providers.dart';
 import '../widgets/glass_container.dart';
 
@@ -35,10 +36,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authNotifierProvider.notifier).signInWithGoogle();
     } catch (e) {
       if (mounted) {
+        final errorText = e is SupabaseAuthException
+            ? e.message
+            : e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Sign-in Notice: $e'),
+            content: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Color(0xFFFF5225), size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    errorText,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
             behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFF1E2024),
           ),
         );
       }
@@ -58,6 +74,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _passwordController.text,
               _nameController.text,
             );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created successfully! Welcome to MyMail.'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: Color(0xFF1E2024),
+            ),
+          );
+        }
       } else {
         await ref.read(authNotifierProvider.notifier).signInWithEmail(
               _emailController.text,
@@ -66,10 +91,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final errorText = e is SupabaseAuthException
+            ? e.message
+            : e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Auth error: $e'),
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Color(0xFFFF5225), size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    errorText,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
             behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFF1E2024),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
