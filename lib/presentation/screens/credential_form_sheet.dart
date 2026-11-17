@@ -114,7 +114,7 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
           SnackBar(
             content: Text(isEditing ? 'Account updated' : 'Account saved to vault'),
             behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFF7C3AED),
+            backgroundColor: const Color(0xFF191817),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -139,16 +139,16 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
 
     final inputDecoration = InputDecoration(
       filled: true,
-      fillColor: Colors.white,
+      fillColor: Colors.white.withOpacity(0.65),
       labelStyle: const TextStyle(color: Color(0xFF726F68), fontSize: 13.5),
       hintStyle: const TextStyle(color: Color(0xFF8C8982), fontSize: 13.5),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.85), width: 1.2),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.85), width: 1.2),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -301,35 +301,56 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
               ),
               const SizedBox(height: 26),
 
-              // Save Action Button
-              SizedBox(
+              // Save Action Button (Shiny Obsidian Pill)
+              Container(
                 width: double.infinity,
                 height: 52,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF191817),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(26),
-                    ),
-                    elevation: 2,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF383638),
+                      Color(0xFF1E1D1F),
+                      Color(0xFF100F10),
+                    ],
                   ),
-                  onPressed: _isSaving ? null : _save,
-                  child: _isSaving
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                        )
-                      : Text(
-                          isEditing ? 'Save Changes' : 'Save Account',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.24),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.28),
+                      blurRadius: 16,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(26),
+                    onTap: _isSaving ? null : _save,
+                    child: Center(
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                            )
+                          : Text(
+                              isEditing ? 'Save Changes' : 'Save Account',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                    ),
+                  ),
                 ),
               ),
             ],

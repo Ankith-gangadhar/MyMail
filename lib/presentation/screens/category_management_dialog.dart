@@ -161,9 +161,10 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
     final categoriesAsync = ref.watch(categoriesProvider);
 
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFAF9F6),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(28),
+        side: BorderSide(color: Colors.black.withOpacity(0.06)),
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420, minWidth: 320),
@@ -189,9 +190,20 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                   Container(
                     width: 36,
                     height: 36,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFF191817),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF383638),
+                          Color(0xFF1E1D1F),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.20),
+                        width: 1,
+                      ),
                     ),
                     child: IconButton(
                       padding: EdgeInsets.zero,
@@ -292,15 +304,48 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
               const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerRight,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF191817),
-                    shape: RoundedRectangleBorder(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF383638),
+                        Color(0xFF1E1D1F),
+                        Color(0xFF100F10),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.24),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.20),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
                       borderRadius: BorderRadius.circular(20),
+                      onTap: () => Navigator.of(context).pop(),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 9),
+                        child: Text(
+                          'Done',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Done'),
                 ),
               ),
             ],

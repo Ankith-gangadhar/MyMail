@@ -28,13 +28,37 @@ class GlassColors {
   static const Color accentGold = Color(0xFFD4A373);
   static const Color accentWarmBronze = Color(0xFFC59B6D);
 
-  // Primary Obsidian Jet Black Gradient
+  // Primary Shiny Obsidian Jet Black Gradient
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF2A2928),
-      Color(0xFF161514),
+      Color(0xFF383637),
+      Color(0xFF1E1D1F),
+      Color(0xFF111011),
+    ],
+    stops: [0.0, 0.5, 1.0],
+  );
+
+  // Shiny Obsidian Gradient for Cards
+  static const LinearGradient shinyObsidianGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFF2E2D30),
+      Color(0xFF1D1C1E),
+      Color(0xFF131314),
+    ],
+    stops: [0.0, 0.45, 1.0],
+  );
+
+  // Transparent Glassy White Gradient
+  static const LinearGradient glassWhiteGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xB3FFFFFF), // ~70% white
+      Color(0x66FFFFFF), // ~40% white
     ],
   );
 
@@ -53,8 +77,8 @@ class GlassColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF2A2928),
-      Color(0xFF161514),
+      Color(0xFF2E2D30),
+      Color(0xFF131314),
     ],
   );
 
@@ -63,17 +87,18 @@ class GlassColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFFEDEAE2),
-      Color(0xFFE4E0D7),
+      Color(0x66E8E5DD),
+      Color(0x40E8E5DD),
     ],
   );
 
   // Glass borders and fills
   static Color glassFill = const Color(0xFF1E1E1E);
-  static Color glassFillLight = const Color(0xFFFFFFFF);
-  static Color glassBorder = Colors.black.withValues(alpha: 0.06);
-  static Color glassBorderSubtle = Colors.black.withValues(alpha: 0.04);
+  static Color glassFillLight = Colors.white.withOpacity(0.55);
+  static Color glassBorder = Colors.white.withOpacity(0.80);
+  static Color glassBorderSubtle = Colors.white.withOpacity(0.50);
   static Color glassBorderActive = const Color(0xFF191817);
+  static Color shinyBorder = Colors.white.withOpacity(0.15);
 }
 
 /// GlassBackground renders the soft warm luxury ivory canvas with subtle organic ambient depth
@@ -136,7 +161,7 @@ class GlassBackground extends StatelessWidget {
   }
 }
 
-/// Luxury obsidian charcoal card with rounded geometry
+/// Luxury obsidian shiny card or frosted white glass container
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final double? width;
@@ -147,6 +172,8 @@ class GlassContainer extends StatelessWidget {
   final double blur;
   final Color? borderColor;
   final Color? backgroundColor;
+  final Gradient? gradient;
+  final bool isGlassLight;
   final VoidCallback? onTap;
 
   const GlassContainer({
@@ -160,32 +187,95 @@ class GlassContainer extends StatelessWidget {
     this.blur = 16,
     this.borderColor,
     this.backgroundColor,
+    this.gradient,
+    this.isGlassLight = false,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveBorder = Border.all(
+      color: borderColor ??
+          (isGlassLight
+              ? Colors.white.withOpacity(0.85)
+              : Colors.white.withOpacity(0.14)),
+      width: 1.2,
+    );
+
+    final effectiveGradient = gradient ??
+        (isGlassLight
+            ? GlassColors.glassWhiteGradient
+            : (backgroundColor == null ? GlassColors.shinyObsidianGradient : null));
+
     Widget content = Container(
       width: width,
       height: height,
       padding: padding ?? const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: backgroundColor ?? GlassColors.cardObsidian,
+        color: effectiveGradient == null ? (backgroundColor ?? GlassColors.cardObsidian) : null,
+        gradient: effectiveGradient,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(
-          color: borderColor ?? Colors.black.withValues(alpha: 0.06),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        border: effectiveBorder,
+        boxShadow: isGlassLight
+            ? [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: const Color(0xFF100F0F).withOpacity(0.25),
+                  blurRadius: 20,
+                  spreadRadius: -2,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: Colors.white.withOpacity(0.04),
+                  blurRadius: 1,
+                  offset: const Offset(0, 1),
+                ),
+              ],
       ),
-      child: child,
+      child: isGlassLight
+          ? child
+          : Stack(
+              children: [
+                // Top specular sheen reflection for shiny obsidian finish
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 48,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(borderRadius)),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withOpacity(0.08),
+                          Colors.white.withOpacity(0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                child,
+              ],
+            ),
     );
+
+    if (isGlassLight) {
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          child: content,
+        ),
+      );
+    }
 
     if (onTap != null) {
       content = Material(
@@ -209,7 +299,7 @@ class GlassContainer extends StatelessWidget {
   }
 }
 
-/// Luxury Obsidian Black / Champagne Gold button
+/// Luxury Shiny Obsidian Black / Champagne Gold button
 class GlassGradientButton extends StatelessWidget {
   final Widget child;
   final VoidCallback? onPressed;
@@ -240,13 +330,17 @@ class GlassGradientButton extends StatelessWidget {
               )
             : (gradient ?? GlassColors.primaryGradient),
         borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.20),
+          width: 1.2,
+        ),
         boxShadow: onPressed == null
             ? []
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 14,
-                  offset: const Offset(0, 5),
+                  color: Colors.black.withOpacity(0.28),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
                 ),
               ],
       ),

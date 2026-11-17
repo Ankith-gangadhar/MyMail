@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/category_entity.dart';
@@ -197,59 +198,91 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
         actions: [
-          // Circular White Pill for Share
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              border: Border.all(color: Colors.black.withOpacity(0.06)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+          // Circular Glass Pill for Share
+          ClipRRect(
+            borderRadius: BorderRadius.circular(19),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withOpacity(0.78),
+                      Colors.white.withOpacity(0.45),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.92),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              tooltip: 'Export & Share (${currentCategory?.name ?? "Category"})',
-              icon: const Icon(Icons.share_outlined, color: Color(0xFF191817), size: 18),
-              onPressed: () {
-                if (currentCategory != null) {
-                  final allCredentials = credentialsAsync.value ?? [];
-                  _shareCurrentCategory(currentCategory, allCredentials);
-                }
-              },
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  tooltip: 'Export & Share (${currentCategory?.name ?? "Category"})',
+                  icon: const Icon(Icons.share_outlined, color: Color(0xFF191817), size: 18),
+                  onPressed: () {
+                    if (currentCategory != null) {
+                      final allCredentials = credentialsAsync.value ?? [];
+                      _shareCurrentCategory(currentCategory, allCredentials);
+                    }
+                  },
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 8),
 
-          // Circular White Pill for Lock
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              border: Border.all(color: Colors.black.withOpacity(0.06)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+          // Circular Glass Pill for Lock
+          ClipRRect(
+            borderRadius: BorderRadius.circular(19),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withOpacity(0.78),
+                      Colors.white.withOpacity(0.45),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.92),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              tooltip: 'Lock Vault',
-              icon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF191817), size: 18),
-              onPressed: () {
-                ref.read(authNotifierProvider.notifier).lockApp();
-              },
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  tooltip: 'Lock Vault',
+                  icon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF191817), size: 18),
+                  onPressed: () {
+                    ref.read(authNotifierProvider.notifier).lockApp();
+                  },
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -342,55 +375,83 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(26),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 68,
-                                height: 68,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Color(0xFF191817),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(26),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.white.withOpacity(0.70),
+                                    Colors.white.withOpacity(0.42),
+                                  ],
                                 ),
-                                child: const Icon(
-                                  Icons.mail_lock_outlined,
-                                  size: 34,
-                                  color: Colors.white,
+                                borderRadius: BorderRadius.circular(26),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.90),
+                                  width: 1.2,
                                 ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 18),
-                              Text(
-                                'No accounts in ${currentCategory?.name ?? 'category'}',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF191817),
-                                ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 68,
+                                    height: 68,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: const LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Color(0xFF383638),
+                                          Color(0xFF1E1D1F),
+                                        ],
+                                      ),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.20),
+                                        width: 1.2,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.mail_lock_outlined,
+                                      size: 34,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  Text(
+                                    'No accounts in ${currentCategory?.name ?? 'category'}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF191817),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Tap the "+" button below to store your first email ID and password securely in your vault.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF726F68),
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Tap the "+" button below to store your first email ID and password securely in your vault.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF726F68),
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -466,12 +527,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         width: 58,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(0xFF191817),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF3C3A3C),
+              Color(0xFF201F21),
+              Color(0xFF100F10),
+            ],
+          ),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.25),
+            width: 1.3,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.20),
+              color: Colors.black.withOpacity(0.32),
               blurRadius: 18,
               offset: const Offset(0, 6),
+            ),
+            BoxShadow(
+              color: Colors.white.withOpacity(0.08),
+              blurRadius: 1,
+              offset: const Offset(0, 1),
             ),
           ],
         ),

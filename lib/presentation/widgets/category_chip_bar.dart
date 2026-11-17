@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/category_entity.dart';
@@ -67,32 +68,48 @@ class CategoryChipBar extends ConsumerWidget {
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           if (index == orderedList.length) {
-            // Manage/Edit categories button
-            return Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(22),
-                onTap: onManageCategories,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8E5DD),
+            // Manage/Edit categories button (transparent glassy pill)
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
                     borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: Colors.black.withOpacity(0.05)),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.tune_rounded, size: 16, color: Color(0xFF5A5852)),
-                      SizedBox(width: 6),
-                      Text(
-                        'Edit',
-                        style: TextStyle(
-                          color: Color(0xFF5A5852),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                    onTap: onManageCategories,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withOpacity(0.45),
+                            const Color(0xFFE8E5DD).withOpacity(0.40),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.70),
+                          width: 1.1,
                         ),
                       ),
-                    ],
+                      child: const Row(
+                        children: [
+                          Icon(Icons.tune_rounded, size: 16, color: Color(0xFF5A5852)),
+                          SizedBox(width: 6),
+                          Text(
+                            'Edit',
+                            style: TextStyle(
+                              color: Color(0xFF5A5852),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -102,45 +119,67 @@ class CategoryChipBar extends ConsumerWidget {
           final category = orderedList[index];
           final isSelected = selectedCategory == category.id;
 
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(22),
-              onTap: () {
-                if (isSelected) return;
-                ref.read(authNotifierProvider.notifier).recordActivity();
-                ref.read(selectedCategoryProvider.notifier).selectCategory(category.id);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  color: isSelected ? Colors.white : const Color(0xFFE8E5DD),
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: isSelected
-                        ? Colors.black.withOpacity(0.08)
-                        : Colors.transparent,
-                    width: 1,
-                  ),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Center(
-                  child: Text(
-                    category.name,
-                    style: TextStyle(
-                      color: isSelected ? const Color(0xFF191817) : const Color(0xFF6E6B65),
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      fontSize: 13.5,
-                      letterSpacing: -0.1,
+                  onTap: () {
+                    if (isSelected) return;
+                    ref.read(authNotifierProvider.notifier).recordActivity();
+                    ref.read(selectedCategoryProvider.notifier).selectCategory(category.id);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      gradient: isSelected
+                          ? LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white.withOpacity(0.80),
+                                Colors.white.withOpacity(0.50),
+                              ],
+                            )
+                          : LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white.withOpacity(0.35),
+                                const Color(0xFFE8E5DD).withOpacity(0.40),
+                              ],
+                            ),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: isSelected
+                            ? Colors.white.withOpacity(0.95)
+                            : Colors.white.withOpacity(0.55),
+                        width: isSelected ? 1.3 : 1.0,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 12,
+                                offset: const Offset(0, 3),
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: Center(
+                      child: Text(
+                        category.name,
+                        style: TextStyle(
+                          color: isSelected ? const Color(0xFF191817) : const Color(0xFF6E6B65),
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontSize: 13.5,
+                          letterSpacing: -0.1,
+                        ),
+                      ),
                     ),
                   ),
                 ),

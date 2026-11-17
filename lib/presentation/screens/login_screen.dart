@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/vault_providers.dart';
@@ -212,17 +213,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Top App Icon Badge
+                // Top App Icon Badge (Shiny Obsidian)
                 Center(
                   child: Container(
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF191817),
                       shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF383638),
+                          Color(0xFF1E1D1F),
+                          Color(0xFF100F10),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.25),
+                        width: 1.3,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.12),
+                          color: Colors.black.withOpacity(0.22),
                           blurRadius: 20,
                           offset: const Offset(0, 6),
                         ),
@@ -263,45 +276,70 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Google Sign In Button (Prominent Floating Pill)
+                // Google Sign In Button (Transparent Glassy Pill)
                 SizedBox(
                   height: 54,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: BorderSide(color: Colors.black.withOpacity(0.08)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(27),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(27),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white.withOpacity(0.78),
+                              Colors.white.withOpacity(0.48),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(27),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.92),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(27),
+                            onTap: _isLoading ? null : _handleGoogleSignIn,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Google "G" Icon
+                                Image.network(
+                                  'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/480px-Google_%22G%22_logo.svg.png',
+                                  width: 22,
+                                  height: 22,
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                    Icons.g_mobiledata_rounded,
+                                    size: 28,
+                                    color: Color(0xFF4285F4),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Continue with Google',
+                                  style: TextStyle(
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF191817),
+                                    letterSpacing: -0.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                      elevation: 2,
-                      shadowColor: Colors.black.withOpacity(0.06),
-                    ),
-                    onPressed: _isLoading ? null : _handleGoogleSignIn,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Google "G" Icon
-                        Image.network(
-                          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/480px-Google_%22G%22_logo.svg.png',
-                          width: 22,
-                          height: 22,
-                          errorBuilder: (_, __, ___) => const Icon(
-                            Icons.g_mobiledata_rounded,
-                            size: 28,
-                            color: Color(0xFF4285F4),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          'Continue with Google',
-                          style: TextStyle(
-                            fontSize: 15.5,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF191817),
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ),
@@ -340,11 +378,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           decoration: InputDecoration(
                             hintText: 'Full Name',
                             prefixIcon: const Icon(Icons.person_outline, size: 20),
-                            fillColor: Colors.white,
+                            fillColor: Colors.white.withOpacity(0.60),
                             filled: true,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+                              borderSide: BorderSide(color: Colors.white.withOpacity(0.85), width: 1.2),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(color: Colors.white.withOpacity(0.85), width: 1.2),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(color: Color(0xFF191817), width: 1.5),
                             ),
                           ),
                           validator: (v) =>
@@ -362,11 +408,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         decoration: InputDecoration(
                           hintText: 'Email address',
                           prefixIcon: const Icon(Icons.email_outlined, size: 20),
-                          fillColor: Colors.white,
+                          fillColor: Colors.white.withOpacity(0.60),
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.85), width: 1.2),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.85), width: 1.2),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: Color(0xFF191817), width: 1.5),
                           ),
                         ),
                         validator: (v) =>
@@ -391,11 +445,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               setState(() => _obscurePassword = !_obscurePassword);
                             },
                           ),
-                          fillColor: Colors.white,
+                          fillColor: Colors.white.withOpacity(0.60),
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
-                            borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.85), width: 1.2),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.85), width: 1.2),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: Color(0xFF191817), width: 1.5),
                           ),
                         ),
                         validator: (v) =>
@@ -421,35 +483,56 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 14),
                       ],
 
-                      // Submit Button (Obsidian Pill)
-                      SizedBox(
+                      // Submit Button (Shiny Obsidian Pill)
+                      Container(
                         width: double.infinity,
                         height: 54,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF191817),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(27),
-                            ),
-                            elevation: 3,
-                            shadowColor: Colors.black.withOpacity(0.18),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF3A383A),
+                              Color(0xFF1E1D1F),
+                              Color(0xFF100F10),
+                            ],
                           ),
-                          onPressed: _isLoading ? null : _handleEmailSubmit,
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                                )
-                              : Text(
-                                  _isSignUp ? 'Create Account' : 'Sign In',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.2,
-                                  ),
-                                ),
+                          borderRadius: BorderRadius.circular(27),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.24),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.30),
+                              blurRadius: 18,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(27),
+                            onTap: _isLoading ? null : _handleEmailSubmit,
+                            child: Center(
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                    )
+                                  : Text(
+                                      _isSignUp ? 'Create Account' : 'Sign In',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.2,
+                                      ),
+                                    ),
+                            ),
+                          ),
                         ),
                       ),
                     ],

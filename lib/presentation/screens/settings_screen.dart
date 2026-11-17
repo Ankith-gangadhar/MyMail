@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/vault_providers.dart';
@@ -308,73 +309,94 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           : ListView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               children: [
-                // Profile Card (matching luxury design)
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      GoogleProfileAvatar(
-                        email: userEmail,
-                        label: userLabel,
-                        size: 52,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              userLabel,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF191817),
-                                letterSpacing: -0.3,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              userEmail,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF726F68),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE8E5DD),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                'Google Account Connected',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF5A5852),
-                                ),
-                              ),
-                            ),
+                // Profile Card (Transparent Frosted Glass)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withOpacity(0.75),
+                            Colors.white.withOpacity(0.45),
                           ],
                         ),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.92),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
+                      child: Row(
+                        children: [
+                          GoogleProfileAvatar(
+                            email: userEmail,
+                            label: userLabel,
+                            size: 52,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  userLabel,
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF191817),
+                                    letterSpacing: -0.3,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  userEmail,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF726F68),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.50),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.80),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Google Account Connected',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF5A5852),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
 
@@ -391,70 +413,87 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 14,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        secondary: const Icon(Icons.screen_lock_portrait_outlined, color: Color(0xFF191817)),
-                        title: const Text('Screen Capture Protection', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
-                        subtitle: const Text('Blocks screenshots and app switcher recording', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
-                        value: authState.isScreenCaptureProtectionEnabled,
-                        activeColor: const Color(0xFF191817),
-                        onChanged: (val) {
-                          ref.read(authNotifierProvider.notifier).toggleScreenCaptureProtection(val);
-                        },
-                      ),
-                      Divider(height: 1, color: Colors.black.withOpacity(0.06)),
-                      ListTile(
-                        leading: const Icon(Icons.timer_outlined, color: Color(0xFF191817)),
-                        title: const Text('Auto-lock Inactivity Timeout', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
-                        subtitle: Text(
-                          authState.autoLockTimeout == 'immediate'
-                              ? 'Immediate on background'
-                              : authState.autoLockTimeout == '5min'
-                                  ? '5 Minutes'
-                                  : '1 Minute (Default)',
-                          style: const TextStyle(color: Color(0xFF726F68), fontSize: 12),
-                        ),
-                        trailing: DropdownButton<String>(
-                          value: authState.autoLockTimeout,
-                          dropdownColor: Colors.white,
-                          underline: const SizedBox(),
-                          style: const TextStyle(color: Color(0xFF191817)),
-                          items: const [
-                            DropdownMenuItem(value: 'immediate', child: Text('Immediate')),
-                            DropdownMenuItem(value: '1min', child: Text('1 Minute')),
-                            DropdownMenuItem(value: '5min', child: Text('5 Minutes')),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withOpacity(0.75),
+                            Colors.white.withOpacity(0.45),
                           ],
-                          onChanged: (val) {
-                            if (val != null) {
-                              ref.read(authNotifierProvider.notifier).updateAutoLockTimeout(val);
-                            }
-                          },
                         ),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.92),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 14,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                      Divider(height: 1, color: Colors.black.withOpacity(0.06)),
-                      ListTile(
-                        leading: const Icon(Icons.lock_outline_rounded, color: Color(0xFF191817)),
-                        title: const Text('Lock Vault Now', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
-                        subtitle: const Text('Lock app with biometric / device lock', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
-                        onTap: () {
-                          ref.read(authNotifierProvider.notifier).lockApp();
-                          Navigator.of(context).pop();
-                        },
+                      child: Column(
+                        children: [
+                          SwitchListTile(
+                            secondary: const Icon(Icons.screen_lock_portrait_outlined, color: Color(0xFF191817)),
+                            title: const Text('Screen Capture Protection', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
+                            subtitle: const Text('Blocks screenshots and app switcher recording', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
+                            value: authState.isScreenCaptureProtectionEnabled,
+                            activeColor: const Color(0xFF191817),
+                            onChanged: (val) {
+                              ref.read(authNotifierProvider.notifier).toggleScreenCaptureProtection(val);
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.black.withOpacity(0.06)),
+                          ListTile(
+                            leading: const Icon(Icons.timer_outlined, color: Color(0xFF191817)),
+                            title: const Text('Auto-lock Inactivity Timeout', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
+                            subtitle: Text(
+                              authState.autoLockTimeout == 'immediate'
+                                  ? 'Immediate on background'
+                                  : authState.autoLockTimeout == '5min'
+                                      ? '5 Minutes'
+                                      : '1 Minute (Default)',
+                              style: const TextStyle(color: Color(0xFF726F68), fontSize: 12),
+                            ),
+                            trailing: DropdownButton<String>(
+                              value: authState.autoLockTimeout,
+                              dropdownColor: const Color(0xFFFAF9F6),
+                              underline: const SizedBox(),
+                              style: const TextStyle(color: Color(0xFF191817)),
+                              items: const [
+                                DropdownMenuItem(value: 'immediate', child: Text('Immediate')),
+                                DropdownMenuItem(value: '1min', child: Text('1 Minute')),
+                                DropdownMenuItem(value: '5min', child: Text('5 Minutes')),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) {
+                                  ref.read(authNotifierProvider.notifier).updateAutoLockTimeout(val);
+                                }
+                              },
+                            ),
+                          ),
+                          Divider(height: 1, color: Colors.black.withOpacity(0.06)),
+                          ListTile(
+                            leading: const Icon(Icons.lock_outline_rounded, color: Color(0xFF191817)),
+                            title: const Text('Lock Vault Now', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
+                            subtitle: const Text('Lock app with biometric / device lock', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
+                            onTap: () {
+                              ref.read(authNotifierProvider.notifier).lockApp();
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
 
@@ -471,60 +510,102 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 14,
-                        offset: const Offset(0, 3),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withOpacity(0.75),
+                            Colors.white.withOpacity(0.45),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.92),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 14,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.cloud_download_outlined, color: Color(0xFF191817)),
-                        title: const Text('Create Encrypted Backup', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
-                        subtitle: const Text('Export all categories and accounts safely', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
-                        onTap: _startBackupFlow,
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.cloud_download_outlined, color: Color(0xFF191817)),
+                            title: const Text('Create Encrypted Backup', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
+                            subtitle: const Text('Export all categories and accounts safely', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
+                            onTap: _startBackupFlow,
+                          ),
+                          Divider(height: 1, color: Colors.black.withOpacity(0.06)),
+                          ListTile(
+                            leading: const Icon(Icons.restore_page_outlined, color: Color(0xFF191817)),
+                            title: const Text('Restore from Backup', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
+                            subtitle: const Text('Import accounts from an encrypted backup file', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
+                            onTap: _startRestoreFlow,
+                          ),
+                        ],
                       ),
-                      Divider(height: 1, color: Colors.black.withOpacity(0.06)),
-                      ListTile(
-                        leading: const Icon(Icons.restore_page_outlined, color: Color(0xFF191817)),
-                        title: const Text('Restore from Backup', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
-                        subtitle: const Text('Import accounts from an encrypted backup file', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
-                        onTap: _startRestoreFlow,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
 
                 const SizedBox(height: 24),
 
-                // Sign Out Button
+                // Sign Out Button (Glassy Red Pill)
                 SizedBox(
                   width: double.infinity,
                   height: 52,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.logout_rounded, color: Colors.red, size: 20),
-                    label: const Text(
-                      'Sign Out',
-                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 15),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(26),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withOpacity(0.70),
+                              Colors.white.withOpacity(0.45),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(26),
+                          border: Border.all(color: Colors.red.withOpacity(0.35), width: 1.2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.red.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.logout_rounded, color: Colors.red, size: 20),
+                          label: const Text(
+                            'Sign Out',
+                            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 15),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide.none,
+                            backgroundColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                          ),
+                          onPressed: () async {
+                            await ref.read(authNotifierProvider.notifier).signOut();
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                            }
+                          },
+                        ),
+                      ),
                     ),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.red.shade200),
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-                    ),
-                    onPressed: () async {
-                      await ref.read(authNotifierProvider.notifier).signOut();
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
-                    },
                   ),
                 ),
 
