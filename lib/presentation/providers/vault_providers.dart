@@ -145,7 +145,24 @@ class AuthNotifier extends Notifier<AuthState> {
     final screenCaptureEnabled = await _keyStorageService.getScreenCaptureProtectionEnabled();
     await ScreenProtectionService.setProtection(screenCaptureEnabled);
 
-    // Check if an authenticated MyMail session is stored locally
+    // 1. Check if Firebase Auth has an active user
+    final currentUser = _recoveryService.currentUser;
+    if (currentUser != null) {
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        autoLockTimeout: timeout,
+        unlockedCategoryIds: {'cat_work', 'cat_personal', 'cat_business'},
+        isScreenCaptureProtectionEnabled: screenCaptureEnabled,
+        userEmail: currentUser.email,
+        userDisplayName: currentUser.displayName ?? currentUser.email?.split('@').first,
+        userPhotoUrl: currentUser.photoURL,
+        isSignedIn: true,
+        lastActiveTime: DateTime.now(),
+      );
+      return;
+    }
+
+    // 2. Check if a local session is stored
     final session = await _authService.restoreSession();
     if (session != null) {
       state = state.copyWith(
@@ -162,7 +179,7 @@ class AuthNotifier extends Notifier<AuthState> {
       return;
     }
 
-    // Otherwise unauthenticated
+    // 3. Otherwise unauthenticated
     state = state.copyWith(
       status: AuthStatus.unauthenticated,
       autoLockTimeout: timeout,
@@ -175,65 +192,96 @@ class AuthNotifier extends Notifier<AuthState> {
     );
   }
 
-  /// Sign In with Google for MyMail
+  /// Sign In with Google via Firebase Auth
   Future<void> signInWithGoogle() async {
-    final session = await _authService.signInWithGoogle();
-    state = state.copyWith(
-      status: AuthStatus.authenticated,
-      userEmail: session.email,
-      userDisplayName: session.displayName ?? 'Ankith Gangadhar',
-      userPhotoUrl: session.avatarUrl,
-      isSignedIn: true,
-      lastActiveTime: DateTime.now(),
-    );
-  }
-
-  /// Sign In with Email & Password (verified against stored credentials)
-  Future<void> signInWithEmail(String email, String password) async {
-    final session = await _authService.signInWithPassword(
-      email: email,
-      password: password,
-    );
-
-    state = state.copyWith(
-      status: AuthStatus.authenticated,
-      userEmail: session.email,
-      userDisplayName: session.displayName ?? session.email.split('@').first,
-      userPhotoUrl: session.avatarUrl,
-      isSignedIn: true,
-      lastActiveTime: DateTime.now(),
-    );
-  }
-
-  /// Create Account with Email & Password (stored in MyMail secure vault)
-  Future<void> signUpWithEmail(String email, String password, String name) async {
-    final session = await _authService.signUp(
-      email: email,
-      password: password,
-      name: name,
-    );
-
-    state = state.copyWith(
-      status: AuthStatus.authenticated,
-      userEmail: session.email,
-      userDisplayName: session.displayName ?? (name.isNotEmpty ? name : session.email.split('@').first),
-      userPhotoUrl: session.avatarUrl,
-      isSignedIn: true,
-      lastActiveTime: DateTime.now(),
-    );
-  }
-
-  /// Forgot Password flow
-  Future<void> sendPasswordReset(String email) async {
-    await _authService.sendPasswordReset(email);
-  }
-
-  /// Sign Out: clears session and returns to login screen
-  Future<void> signOut() async {
-    await _authService.clearSession();
     try {
-      await _recoveryService.signOut();
-    } catch (_) {}
+      final cred = await _recoveryService.signInWithGoogle();
+      final user = cred.user;
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        userEmail: user?.email ?? 'user@gmail.com',
+        userDisplayName: user?.displayName ?? 'MyMail User',
+        userPhotoUrl: user?.photoURL,
+        isSignedIn: true,
+        lastActiveTime: DateTime.now(),
+      );
+    } catch (e) {
+      debugPrint('Google Sign-In note: $e');
+      rethrow;
+    }
+  }
+
+  /// Sign In with Email & Password via Firebase Auth
+  Future<void> signInWithEmail(String email, String password) async {
+    final cleanEmail = email.trim();
+    if (cleanEmail.isEmpty || password.isEmpty) {
+      throw Exception('Please enter both email and password.');
+    }
+
+    try {
+      final cred = await _recoveryService.signInWithEmail(cleanEmail, password);
+      final user = cred.user;
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        userEmail: user?.email ?? cleanEmail,
+        userDisplayName: user?.displayName ?? cleanEmail.split('@').first,
+        userPhotoUrl: user?.photoURL,
+        isSignedIn: true,
+        lastActiveTime: DateTime.now(),
+      );
+    } catch (e) {
+      // Fallback check against local vault
+      try {
+        final session = await _authService.signInWithPassword(
+          email: cleanEmail,
+          password: password,
+        );
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          userEmail: session.email,
+          userDisplayName: session.displayName ?? session.email.split('@').first,
+          userPhotoUrl: session.avatarUrl,
+          isSignedIn: true,
+          lastActiveTime: DateTime.now(),
+        );
+        return;
+      } catch (_) {}
+      rethrow;
+    }
+  }
+
+  /// Create Account with Email & Password via Firebase Auth
+  Future<void> signUpWithEmail(String email, String password, String name) async {
+    final cleanEmail = email.trim();
+    try {
+      final cred = await _recoveryService.signUpWithEmail(cleanEmail, password, name);
+      final user = cred.user;
+      try {
+        await _authService.signUp(email: cleanEmail, password: password, name: name);
+      } catch (_) {}
+
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        userEmail: user?.email ?? cleanEmail,
+        userDisplayName: name.isNotEmpty ? name : (user?.displayName ?? cleanEmail.split('@').first),
+        userPhotoUrl: user?.photoURL,
+        isSignedIn: true,
+        lastActiveTime: DateTime.now(),
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Forgot Password flow via Firebase Auth
+  Future<void> sendPasswordReset(String email) async {
+    await _recoveryService.sendPasswordResetEmail(email.trim());
+  }
+
+  /// Sign Out: clears Firebase session and returns to login screen
+  Future<void> signOut() async {
+    await _recoveryService.signOut();
+    await _authService.clearSession();
 
     state = state.copyWith(
       status: AuthStatus.unauthenticated,

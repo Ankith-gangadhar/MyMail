@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "575302675791",
+    "project_id": "mymail-53c86",
+    "storage_bucket": "mymail-53c86.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:575302675791:android:52c305d33a4496f74ca93a",
+        "android_client_info": {
+          "package_name": "com.ankith.mymail.my_mail"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpYAtz64GV5Sd6qyBBRpqN2dVecKOpkVw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
