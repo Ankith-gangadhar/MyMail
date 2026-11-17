@@ -1,53 +1,68 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
-/// Global luxury color palette inspired by the high-end luxury booking & hotel design
-/// Soft warm ivory/sand canvas, obsidian charcoal cards, and clean rounded pill geometry
+/// Global color palette inspired by the futuristic Steel Grey, Deep Charcoal & Electric Ember Orange design
 class GlassColors {
-  // Luxury Warm Ivory Canvas
-  static const Color backgroundIvory = Color(0xFFF4F3EE);
-  static const Color backgroundIvoryLight = Color(0xFFFAF9F6);
-  static const Color backgroundIvorySurface = Color(0xFFEBE8E1);
+  // Cool Futuristic Steel Grey Canvas
+  static const Color backgroundGrey = Color(0xFFE5E7EB);
+  static const Color backgroundGreyLight = Color(0xFFEDEFF3);
+  static const Color backgroundIvory = Color(0xFFE5E7EB);
+  static const Color backgroundIvoryLight = Color(0xFFEDEFF3);
+  static const Color backgroundIvorySurface = Color(0xFFDDE0E7);
 
   // Legacy alias for backwards compatibility
-  static const Color backgroundDark = Color(0xFFF4F3EE);
-  static const Color backgroundDeep = Color(0xFFEBE8E1);
+  static const Color backgroundDark = Color(0xFFE5E7EB);
+  static const Color backgroundDeep = Color(0xFFDDE0E7);
 
-  // Obsidian Charcoal for Cards & Dark Elements
-  static const Color cardDark = Color(0xFF1E1E1E);
-  static const Color cardDarkElevated = Color(0xFF262524);
-  static const Color cardObsidian = Color(0xFF1E1E1E);
+  // Deep Charcoal & Obsidian for Cards & Dark Elements
+  static const Color cardDark = Color(0xFF1A1C21);
+  static const Color cardDarkElevated = Color(0xFF23252C);
+  static const Color cardObsidian = Color(0xFF18191E);
+  static const Color cardCharcoal = Color(0xFF1A1C21);
 
   // Typography
-  static const Color textDark = Color(0xFF191817);
-  static const Color textMuted = Color(0xFF726F68);
+  static const Color textDark = Color(0xFF121316);
+  static const Color textMuted = Color(0xFF6B7280);
   static const Color textLight = Colors.white;
-  static const Color textSilver = Color(0xFFD5D3CB);
+  static const Color textSilver = Color(0xFFD3D6DE);
 
-  // Warm Champagne Gold & Bronze Accents
-  static const Color accentGold = Color(0xFFD4A373);
-  static const Color accentWarmBronze = Color(0xFFC59B6D);
+  // Vibrant Electric Ember Orange Accents
+  static const Color accentOrange = Color(0xFFFF5225);
+  static const Color accentOrangeGlow = Color(0xFFFF6E40);
+  static const Color accentOrangeDark = Color(0xFFFF3310);
+  static const Color accentGold = Color(0xFFFF5225);
+  static const Color accentWarmBronze = Color(0xFFFF6E40);
 
-  // Primary Shiny Obsidian Jet Black Gradient
+  // Vibrant Electric Orange Gradient
+  static const LinearGradient orangeGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFFFF5E36),
+      Color(0xFFFF3310),
+    ],
+  );
+
+  // Primary Shiny Charcoal Gradient
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF383637),
-      Color(0xFF1E1D1F),
-      Color(0xFF111011),
+      Color(0xFF2D2F37),
+      Color(0xFF1A1B20),
+      Color(0xFF101114),
     ],
     stops: [0.0, 0.5, 1.0],
   );
 
-  // Shiny Obsidian Gradient for Cards
+  // Shiny Charcoal Gradient for Cards
   static const LinearGradient shinyObsidianGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF2E2D30),
-      Color(0xFF1D1C1E),
-      Color(0xFF131314),
+      Color(0xFF262830),
+      Color(0xFF18191E),
+      Color(0xFF101114),
     ],
     stops: [0.0, 0.45, 1.0],
   );
@@ -62,13 +77,13 @@ class GlassColors {
     ],
   );
 
-  // Luxury Warm Champagne Gold Gradient
+  // Electric Orange Glow Gradient
   static const LinearGradient goldGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFFDFB78B),
-      Color(0xFFC3965E),
+      Color(0xFFFF6E40),
+      Color(0xFFFF3D00),
     ],
   );
 
@@ -77,8 +92,8 @@ class GlassColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0xFF2E2D30),
-      Color(0xFF131314),
+      Color(0xFF262830),
+      Color(0xFF101114),
     ],
   );
 
@@ -87,21 +102,21 @@ class GlassColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      Color(0x66E8E5DD),
-      Color(0x40E8E5DD),
+      Color(0x66DDE0E7),
+      Color(0x40DDE0E7),
     ],
   );
 
   // Glass borders and fills
-  static Color glassFill = const Color(0xFF1E1E1E);
-  static Color glassFillLight = Colors.white.withOpacity(0.55);
-  static Color glassBorder = Colors.white.withOpacity(0.80);
+  static Color glassFill = const Color(0xFF1A1C21);
+  static Color glassFillLight = Colors.white.withOpacity(0.60);
+  static Color glassBorder = Colors.white.withOpacity(0.85);
   static Color glassBorderSubtle = Colors.white.withOpacity(0.50);
-  static Color glassBorderActive = const Color(0xFF191817);
-  static Color shinyBorder = Colors.white.withOpacity(0.15);
+  static Color glassBorderActive = const Color(0xFFFF5225);
+  static Color shinyBorder = Colors.white.withOpacity(0.14);
 }
 
-/// GlassBackground renders the soft warm luxury ivory canvas with subtle organic ambient depth
+/// GlassBackground renders the cool steel grey canvas with radiant ember/orange ambient light
 class GlassBackground extends StatelessWidget {
   final Widget child;
 
@@ -110,33 +125,13 @@ class GlassBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: GlassColors.backgroundIvory,
+      color: GlassColors.backgroundGrey,
       child: Stack(
         children: [
-          // Soft warm organic radial gradient in top right
+          // Top right subtle cool steel aura
           Positioned(
             top: -60,
             right: -40,
-            child: Container(
-              width: 340,
-              height: 340,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFFEBE5D8).withValues(alpha: 0.8),
-                    const Color(0xFFF4F3EE).withValues(alpha: 0.0),
-                  ],
-                  stops: const [0.0, 1.0],
-                ),
-              ),
-            ),
-          ),
-
-          // Lower left warm sand glow
-          Positioned(
-            bottom: 40,
-            left: -80,
             child: Container(
               width: 320,
               height: 320,
@@ -144,8 +139,49 @@ class GlassBackground extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFECE6DA).withValues(alpha: 0.7),
-                    const Color(0xFFF4F3EE).withValues(alpha: 0.0),
+                    const Color(0xFFCAD0DC).withOpacity(0.6),
+                    const Color(0xFFE5E7EB).withOpacity(0.0),
+                  ],
+                  stops: const [0.0, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // Lower left radiant ember orange glow (signature futuristic aesthetic)
+          Positioned(
+            bottom: -60,
+            left: -40,
+            child: Container(
+              width: 420,
+              height: 420,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFFFF5225).withOpacity(0.38),
+                    const Color(0xFFFF6E40).withOpacity(0.18),
+                    const Color(0xFFE5E7EB).withOpacity(0.0),
+                  ],
+                  stops: const [0.0, 0.45, 1.0],
+                ),
+              ),
+            ),
+          ),
+
+          // Lower right secondary ambient warm glow
+          Positioned(
+            bottom: 120,
+            right: -80,
+            child: Container(
+              width: 280,
+              height: 280,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFFFF3D00).withOpacity(0.20),
+                    const Color(0xFFE5E7EB).withOpacity(0.0),
                   ],
                   stops: const [0.0, 1.0],
                 ),

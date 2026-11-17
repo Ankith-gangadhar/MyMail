@@ -148,50 +148,74 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              SizedBox(
+              Container(
                 width: double.infinity,
                 height: 52,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF191817),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(26),
-                    ),
-                    elevation: 0,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFFF5E36),
+                      Color(0xFFFF3310),
+                    ],
                   ),
-                  onPressed: isSending
-                      ? null
-                      : () async {
-                          final email = resetEmailController.text.trim();
-                          if (email.isEmpty) return;
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(
+                    color: const Color(0xFFFF855F),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF451A).withOpacity(0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(26),
+                    onTap: isSending
+                        ? null
+                        : () async {
+                            final email = resetEmailController.text.trim();
+                            if (email.isEmpty) return;
 
-                          setSheetState(() => isSending = true);
-                          await ref.read(authNotifierProvider.notifier).sendPasswordReset(email);
+                            setSheetState(() => isSending = true);
+                            await ref.read(authNotifierProvider.notifier).sendPasswordReset(email);
 
-                          if (!ctx.mounted) return;
-                          Navigator.of(ctx).pop();
+                            if (!ctx.mounted) return;
+                            Navigator.of(ctx).pop();
 
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Password reset instructions sent to $email'),
-                                backgroundColor: const Color(0xFF191817),
-                                behavior: SnackBarBehavior.floating,
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Password reset instructions sent to $email'),
+                                  backgroundColor: const Color(0xFF141518),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          },
+                    child: Center(
+                      child: isSending
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Text(
+                              'Send Reset Link',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
-                            );
-                          }
-                        },
-                  child: isSending
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : const Text(
-                          'Send Reset Link',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
+                            ),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -213,7 +237,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Top App Icon Badge (Shiny Obsidian)
+                // Top App Icon Badge (Electric Ember Orange Glow)
                 Center(
                   child: Container(
                     width: 72,
@@ -224,18 +248,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Color(0xFF383638),
-                          Color(0xFF1E1D1F),
-                          Color(0xFF100F10),
+                          Color(0xFFFF5E36),
+                          Color(0xFFFF3310),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.25),
+                        color: const Color(0xFFFF8A65),
                         width: 1.3,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.22),
+                          color: const Color(0xFFFF451A).withOpacity(0.35),
                           blurRadius: 20,
                           offset: const Offset(0, 6),
                         ),
@@ -257,7 +280,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF191817),
+                      color: Color(0xFF121316),
                       letterSpacing: -0.6,
                     ),
                   ),
@@ -457,7 +480,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: Color(0xFF191817), width: 1.5),
+                            borderSide: const BorderSide(color: Color(0xFFFF5225), width: 1.5),
                           ),
                         ),
                         validator: (v) =>
@@ -472,7 +495,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: const Text(
                               'Forgot password?',
                               style: TextStyle(
-                                color: Color(0xFF191817),
+                                color: Color(0xFFFF5225),
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
                               ),
@@ -483,7 +506,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 14),
                       ],
 
-                      // Submit Button (Shiny Obsidian Pill)
+                      // Submit Button (Electric Ember Orange Glow Pill)
                       Container(
                         width: double.infinity,
                         height: 54,
@@ -492,19 +515,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              Color(0xFF3A383A),
-                              Color(0xFF1E1D1F),
-                              Color(0xFF100F10),
+                              Color(0xFFFF5E36),
+                              Color(0xFFFF3310),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(27),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.24),
+                            color: const Color(0xFFFF855F),
                             width: 1.2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.30),
+                              color: const Color(0xFFFF451A).withOpacity(0.38),
                               blurRadius: 18,
                               offset: const Offset(0, 6),
                             ),
@@ -547,7 +569,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     Text(
                       _isSignUp ? 'Already have an account?' : "Don't have an account?",
-                      style: const TextStyle(color: Color(0xFF726F68), fontSize: 13.5),
+                      style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13.5),
                     ),
                     TextButton(
                       onPressed: () {
@@ -556,7 +578,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Text(
                         _isSignUp ? 'Sign In' : 'Sign Up',
                         style: const TextStyle(
-                          color: Color(0xFF191817),
+                          color: Color(0xFFFF5225),
                           fontWeight: FontWeight.bold,
                           fontSize: 13.5,
                         ),

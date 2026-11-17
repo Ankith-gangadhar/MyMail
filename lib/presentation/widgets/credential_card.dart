@@ -72,20 +72,20 @@ class _CredentialCardState extends State<CredentialCard>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF2F2E31), // Sleek glossy highlight
-              Color(0xFF1E1D1F), // Rich obsidian body
-              Color(0xFF121213), // Deep onyx shadow
+              Color(0xFF292B34), // Sleek charcoal highlight
+              Color(0xFF1A1C22), // Deep charcoal body
+              Color(0xFF111216), // Onyx shadow
             ],
             stops: [0.0, 0.45, 1.0],
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Colors.white.withOpacity(0.15), // Specular light-catching rim
+            color: Colors.white.withOpacity(0.14), // Specular light-catching rim
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF100F0F).withOpacity(0.28),
+              color: const Color(0xFF0F1014).withOpacity(0.30),
               blurRadius: 20,
               spreadRadius: -2,
               offset: const Offset(0, 8),
@@ -272,7 +272,7 @@ class _CredentialCardState extends State<CredentialCard>
                                 const Icon(
                                   Icons.key_rounded,
                                   size: 18,
-                                  color: Color(0xFFD4A373), // Subtle champagne gold
+                                  color: Color(0xFFFF5225), // Electric ember orange
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(

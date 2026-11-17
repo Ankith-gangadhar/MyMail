@@ -373,21 +373,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 ),
                                 const SizedBox(height: 6),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.50),
+                                    color: const Color(0xFFFF5225).withOpacity(0.12),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: Colors.white.withOpacity(0.80),
+                                      color: const Color(0xFFFF5225).withOpacity(0.25),
                                       width: 1,
                                     ),
                                   ),
                                   child: const Text(
                                     'Google Account Connected',
                                     style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF5A5852),
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFFF5225),
                                     ),
                                   ),
                                 ),
@@ -447,7 +447,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             title: const Text('Screen Capture Protection', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
                             subtitle: const Text('Blocks screenshots and app switcher recording', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
                             value: authState.isScreenCaptureProtectionEnabled,
-                            activeColor: const Color(0xFF191817),
+                            activeColor: const Color(0xFFFF5225),
                             onChanged: (val) {
                               ref.read(authNotifierProvider.notifier).toggleScreenCaptureProtection(val);
                             },

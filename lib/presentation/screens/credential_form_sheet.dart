@@ -152,7 +152,7 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFF191817), width: 1.5),
+        borderSide: const BorderSide(color: Color(0xFFFF5225), width: 1.5),
       ),
     );
 
@@ -203,17 +203,21 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
                       ),
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE8E5DD),
+                          color: const Color(0xFFFF5225).withOpacity(0.12),
                           borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: const Color(0xFFFF5225).withOpacity(0.25),
+                            width: 1,
+                          ),
                         ),
                         child: Text(
                           'Category: ${currentCat.name}',
                           style: const TextStyle(
-                            color: Color(0xFF5A5852),
+                            color: Color(0xFFFF5225),
                             fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
@@ -274,7 +278,7 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
                       ),
                       IconButton(
                         tooltip: 'Generate Strong Password',
-                        icon: const Icon(Icons.auto_fix_high_rounded, color: Color(0xFF191817)),
+                        icon: const Icon(Icons.auto_fix_high_rounded, color: Color(0xFFFF5225)),
                         onPressed: _generateStrongPassword,
                       ),
                     ],
@@ -296,12 +300,12 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
                 decoration: inputDecoration.copyWith(
                   labelText: 'Label or Account Name (Optional)',
                   hintText: 'e.g. Mangalore Store, Google Workspace',
-                  prefixIcon: const Icon(Icons.tag_outlined, color: Color(0xFF191817)),
+                  prefixIcon: const Icon(Icons.tag_outlined, color: Color(0xFFFF5225)),
                 ),
               ),
               const SizedBox(height: 26),
 
-              // Save Action Button (Shiny Obsidian Pill)
+              // Save Action Button (Electric Ember Orange Pill)
               Container(
                 width: double.infinity,
                 height: 52,
@@ -310,19 +314,18 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Color(0xFF383638),
-                      Color(0xFF1E1D1F),
-                      Color(0xFF100F10),
+                      Color(0xFFFF5E36),
+                      Color(0xFFFF3310),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(26),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.24),
+                    color: const Color(0xFFFF855F),
                     width: 1.2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.28),
+                      color: const Color(0xFFFF451A).withOpacity(0.38),
                       blurRadius: 16,
                       offset: const Offset(0, 5),
                     ),

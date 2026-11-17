@@ -59,7 +59,7 @@ class _VaultSearchBarState extends ConsumerState<VaultSearchBar> {
             ),
             child: TextField(
               controller: _controller,
-              style: const TextStyle(color: Color(0xFF191817), fontSize: 14),
+              style: const TextStyle(color: Color(0xFF121316), fontSize: 14),
               onChanged: (val) {
                 ref.read(searchQueryProvider.notifier).setQuery(val);
                 setState(() {});
@@ -68,16 +68,16 @@ class _VaultSearchBarState extends ConsumerState<VaultSearchBar> {
                 hintText: 'Search by email or label...',
                 hintStyle: const TextStyle(
                   fontSize: 13.5,
-                  color: Color(0xFF8C8982),
+                  color: Color(0xFF6B7280),
                 ),
                 prefixIcon: const Icon(
                   Icons.search_rounded,
                   size: 20,
-                  color: Color(0xFF191817),
+                  color: Color(0xFFFF5225),
                 ),
                 suffixIcon: _controller.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, size: 16, color: Color(0xFF726F68)),
+                        icon: const Icon(Icons.clear, size: 16, color: Color(0xFF6B7280)),
                         onPressed: () {
                           _controller.clear();
                           ref.read(searchQueryProvider.notifier).clear();

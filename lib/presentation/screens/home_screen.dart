@@ -186,14 +186,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'MyMail',
-              style: TextStyle(
-                color: Color(0xFF191817),
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                letterSpacing: -0.4,
-              ),
+            Row(
+              children: [
+                const Text(
+                  'MyMail',
+                  style: TextStyle(
+                    color: Color(0xFF121316),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.only(left: 4, top: 2),
+                  width: 7,
+                  height: 7,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFFF5225),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -415,14 +428,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                         colors: [
-                                          Color(0xFF383638),
-                                          Color(0xFF1E1D1F),
+                                          Color(0xFFFF5E36),
+                                          Color(0xFFFF3310),
                                         ],
                                       ),
                                       border: Border.all(
-                                        color: Colors.white.withOpacity(0.20),
-                                        width: 1.2,
+                                        color: const Color(0xFFFF8A65),
+                                        width: 1.3,
                                       ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFFFF451A).withOpacity(0.35),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 5),
+                                        ),
+                                      ],
                                     ),
                                     child: const Icon(
                                       Icons.mail_lock_outlined,
@@ -436,7 +456,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF191817),
+                                      color: Color(0xFF121316),
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -531,25 +551,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF3C3A3C),
-              Color(0xFF201F21),
-              Color(0xFF100F10),
+              Color(0xFFFF5E36),
+              Color(0xFFFF3310),
             ],
           ),
           border: Border.all(
-            color: Colors.white.withOpacity(0.25),
+            color: const Color(0xFFFF8A65),
             width: 1.3,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.32),
-              blurRadius: 18,
-              offset: const Offset(0, 6),
-            ),
-            BoxShadow(
-              color: Colors.white.withOpacity(0.08),
-              blurRadius: 1,
-              offset: const Offset(0, 1),
+              color: const Color(0xFFFF451A).withOpacity(0.42),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
           ],
         ),

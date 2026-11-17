@@ -196,14 +196,21 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Color(0xFF383638),
-                          Color(0xFF1E1D1F),
+                          Color(0xFFFF5E36),
+                          Color(0xFFFF3310),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.20),
+                        color: const Color(0xFFFF855F),
                         width: 1,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF451A).withOpacity(0.30),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: IconButton(
                       padding: EdgeInsets.zero,
@@ -310,19 +317,18 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Color(0xFF383638),
-                        Color(0xFF1E1D1F),
-                        Color(0xFF100F10),
+                        Color(0xFFFF5E36),
+                        Color(0xFFFF3310),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.24),
+                      color: const Color(0xFFFF855F),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.20),
+                        color: const Color(0xFFFF451A).withOpacity(0.35),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
