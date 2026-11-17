@@ -179,12 +179,12 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Manage Categories',
+                    'Categories',
                     style: TextStyle(
                       color: Color(0xFF191817),
-                      fontSize: 19,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: -0.3,
+                      letterSpacing: -0.4,
                     ),
                   ),
                   Container(
@@ -200,13 +200,9 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                           Color(0xFFFF3310),
                         ],
                       ),
-                      border: Border.all(
-                        color: const Color(0xFFFF855F),
-                        width: 1,
-                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFFF451A).withOpacity(0.30),
+                          color: const Color(0xFFFF451A).withOpacity(0.32),
                           blurRadius: 10,
                           offset: const Offset(0, 3),
                         ),
@@ -215,7 +211,7 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                     child: IconButton(
                       padding: EdgeInsets.zero,
                       tooltip: 'Add Category',
-                      icon: const Icon(Icons.add, size: 20, color: Colors.white),
+                      icon: const Icon(Icons.add_rounded, size: 22, color: Colors.white),
                       onPressed: _showAddCategoryDialog,
                     ),
                   ),
@@ -240,6 +236,7 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
 
                     return ReorderableListView.builder(
                       shrinkWrap: true,
+                      buildDefaultDragHandles: false,
                       itemCount: categories.length,
                       onReorder: (oldIndex, newIndex) {
                         ref.read(categoriesProvider.notifier).reorderCategories(oldIndex, newIndex);
@@ -251,7 +248,7 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                         return Container(
                           key: ValueKey(cat.id),
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF4F3EE),
                             borderRadius: BorderRadius.circular(16),
@@ -259,12 +256,20 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                           ),
                           child: Row(
                             children: [
-                              const Icon(
-                                Icons.drag_indicator_rounded,
-                                color: Color(0xFF8C8982),
-                                size: 20,
+                              // Left Drag Handle
+                              ReorderableDragStartListener(
+                                index: index,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  color: Colors.transparent,
+                                  child: const Icon(
+                                    Icons.drag_indicator_rounded,
+                                    color: Color(0xFF8C8982),
+                                    size: 20,
+                                  ),
+                                ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   cat.name,
@@ -277,18 +282,23 @@ class _CategoryManagementDialogState extends ConsumerState<CategoryManagementDia
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
+                              // Right Actions: ONLY Edit pen and Delete trash
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.edit_outlined, size: 19),
+                                    icon: const Icon(Icons.edit_outlined, size: 18),
                                     color: const Color(0xFF5A5852),
+                                    visualDensity: VisualDensity.compact,
+                                    tooltip: 'Rename',
                                     onPressed: () => _showRenameDialog(cat),
                                   ),
                                   if (!isDefault)
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline, size: 19),
+                                      icon: const Icon(Icons.delete_outline, size: 18),
                                       color: Colors.red.shade600,
+                                      visualDensity: VisualDensity.compact,
+                                      tooltip: 'Delete',
                                       onPressed: () => _confirmDelete(cat),
                                     ),
                                 ],

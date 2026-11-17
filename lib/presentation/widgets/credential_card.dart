@@ -250,7 +250,7 @@ class _CredentialCardState extends State<CredentialCard>
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
-                              vertical: 10,
+                              vertical: 8,
                             ),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
@@ -276,15 +276,22 @@ class _CredentialCardState extends State<CredentialCard>
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
-                                  child: Text(
-                                    _isPasswordVisible
-                                        ? widget.credential.password
-                                        : '••••••••••',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: _isPasswordVisible ? 15 : 18,
-                                      letterSpacing: _isPasswordVisible ? 0.5 : 3.0,
-                                      fontWeight: FontWeight.w600,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      _isPasswordVisible
+                                          ? widget.credential.password
+                                          : '••••••••',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: _isPasswordVisible ? 13 : 15,
+                                        letterSpacing: _isPasswordVisible ? 0.2 : 2.0,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 1,
+                                      softWrap: false,
+                                      overflow: TextOverflow.clip,
                                     ),
                                   ),
                                 ),
@@ -331,17 +338,17 @@ class _CredentialCardState extends State<CredentialCard>
                               Container(
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.06),
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
                                     color: Colors.white.withOpacity(0.10),
                                     width: 1,
                                   ),
                                 ),
                                 child: TextButton.icon(
-                                  icon: const Icon(Icons.email_outlined, size: 15, color: Color(0xFFD5D3CB)),
-                                  label: const Text('Copy Email', style: TextStyle(color: Color(0xFFD5D3CB), fontSize: 12)),
+                                  icon: const Icon(Icons.copy_rounded, size: 14, color: Color(0xFFD5D3CB)),
+                                  label: const Text('Email', style: TextStyle(color: Color(0xFFD5D3CB), fontSize: 12, fontWeight: FontWeight.w500)),
                                   style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                     visualDensity: VisualDensity.compact,
                                   ),
                                   onPressed: () {
@@ -353,43 +360,41 @@ class _CredentialCardState extends State<CredentialCard>
                                   },
                                 ),
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 8),
                               Container(
+                                width: 34,
+                                height: 34,
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.06),
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
                                     color: Colors.white.withOpacity(0.10),
                                     width: 1,
                                   ),
                                 ),
-                                child: TextButton.icon(
-                                  icon: const Icon(Icons.edit_outlined, size: 15, color: Color(0xFFD5D3CB)),
-                                  label: const Text('Edit', style: TextStyle(color: Color(0xFFD5D3CB), fontSize: 12)),
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                    visualDensity: VisualDensity.compact,
-                                  ),
+                                child: IconButton(
+                                  padding: EdgeInsets.zero,
+                                  icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFFD5D3CB)),
+                                  tooltip: 'Edit',
                                   onPressed: widget.onEdit,
                                 ),
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 8),
                               Container(
+                                width: 34,
+                                height: 34,
                                 decoration: BoxDecoration(
                                   color: Colors.red.withOpacity(0.10),
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
                                     color: Colors.red.withOpacity(0.25),
                                     width: 1,
                                   ),
                                 ),
-                                child: TextButton.icon(
-                                  icon: Icon(Icons.delete_outline, size: 15, color: Colors.red.shade300),
-                                  label: Text('Delete', style: TextStyle(color: Colors.red.shade300, fontSize: 12)),
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                    visualDensity: VisualDensity.compact,
-                                  ),
+                                child: IconButton(
+                                  padding: EdgeInsets.zero,
+                                  icon: Icon(Icons.delete_outline, size: 16, color: Colors.red.shade300),
+                                  tooltip: 'Delete',
                                   onPressed: widget.onDelete,
                                 ),
                               ),

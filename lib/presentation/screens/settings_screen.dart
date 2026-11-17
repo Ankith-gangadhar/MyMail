@@ -343,6 +343,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           GoogleProfileAvatar(
                             email: userEmail,
                             label: userLabel,
+                            photoUrl: authState.userPhotoUrl,
                             size: 52,
                           ),
                           const SizedBox(width: 16),

@@ -182,6 +182,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: GoogleProfileAvatar(
                 email: userEmail,
                 label: userLabel,
+                photoUrl: authState.userPhotoUrl,
                 size: 38,
               ),
             ),

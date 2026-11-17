@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/datasources/mymail_auth_service.dart';
@@ -30,33 +31,115 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  String _getFriendlyAuthError(dynamic error) {
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
+        case 'invalid-credential':
+        case 'wrong-password':
+        case 'user-not-found':
+          return 'Incorrect email or password. Please verify your details or sign up.';
+        case 'email-already-in-use':
+          return 'An account with this email already exists. Please sign in.';
+        case 'weak-password':
+          return 'Password must be at least 6 characters long.';
+        case 'invalid-email':
+          return 'Please enter a valid email address.';
+        case 'user-disabled':
+          return 'This account has been disabled. Please contact support.';
+        case 'too-many-requests':
+          return 'Too many attempts. Please wait a moment before trying again.';
+        case 'network-request-failed':
+          return 'Network error. Please check your internet connection.';
+        case 'popup-closed-by-user':
+          return 'Google sign-in was cancelled.';
+        default:
+          final clean = error.message?.replaceAll(RegExp(r'\[.*?\]'), '').trim();
+          if (clean != null && clean.isNotEmpty) return clean;
+          return 'Authentication failed. Please check your details and try again.';
+      }
+    }
+
+    if (error is MyMailAuthException) {
+      return error.message;
+    }
+
+    final raw = error.toString();
+    if (raw.contains('invalid-credential') || raw.contains('wrong-password') || raw.contains('user-not-found')) {
+      return 'Incorrect email or password. Please verify your details or sign up.';
+    }
+    if (raw.contains('email-already-in-use')) {
+      return 'An account with this email already exists. Please sign in.';
+    }
+    if (raw.contains('weak-password')) {
+      return 'Password must be at least 6 characters long.';
+    }
+    if (raw.contains('invalid-email')) {
+      return 'Please enter a valid email address.';
+    }
+    if (raw.contains('network-request-failed')) {
+      return 'Network error. Please check your internet connection.';
+    }
+
+    final clean = raw.replaceAll(RegExp(r'\[.*?\]'), '').replaceAll('Exception:', '').trim();
+    return clean.isNotEmpty ? clean : 'Authentication failed. Please check your details and try again.';
+  }
+
+  void _showErrorBanner(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF5225).withOpacity(0.18),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                color: Color(0xFFFF5225),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w500,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFF1E2024),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: const Color(0xFFFF5225).withOpacity(0.35),
+            width: 1,
+          ),
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
     try {
       await ref.read(authNotifierProvider.notifier).signInWithGoogle();
     } catch (e) {
       if (mounted) {
-        final errorText = e is MyMailAuthException
-            ? e.message
-            : e.toString().replaceAll('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.info_outline, color: Color(0xFFFF5225), size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    errorText,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFF1E2024),
-          ),
-        );
+        _showErrorBanner(_getFriendlyAuthError(e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -91,28 +174,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final errorText = e is MyMailAuthException
-            ? e.message
-            : e.toString().replaceAll('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Color(0xFFFF5225), size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    errorText,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFF1E2024),
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        _showErrorBanner(_getFriendlyAuthError(e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

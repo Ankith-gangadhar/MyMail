@@ -5,12 +5,14 @@ import 'glass_container.dart';
 class GoogleProfileAvatar extends StatelessWidget {
   final String email;
   final String? label;
+  final String? photoUrl;
   final double size;
 
   const GoogleProfileAvatar({
     super.key,
     required this.email,
     this.label,
+    this.photoUrl,
     this.size = 44,
   });
 
@@ -64,10 +66,12 @@ class GoogleProfileAvatar extends StatelessWidget {
   }
 
   String? get _photoUrl {
+    if (photoUrl != null && photoUrl!.trim().isNotEmpty) {
+      return photoUrl!.trim();
+    }
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null &&
-          currentUser.email?.toLowerCase().trim() == email.toLowerCase().trim() &&
           currentUser.photoURL != null &&
           currentUser.photoURL!.isNotEmpty) {
         return currentUser.photoURL;
