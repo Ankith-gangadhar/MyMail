@@ -8,7 +8,7 @@ import '../../core/security/screen_protection_service.dart';
 import '../../data/datasources/export_import_service.dart';
 import '../../data/datasources/local_database.dart';
 import '../../data/datasources/recovery_remote_service.dart';
-import '../../data/datasources/supabase_auth_service.dart';
+import '../../data/datasources/mymail_auth_service.dart';
 import '../../data/repositories/vault_repository_impl.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/credential_entity.dart';
@@ -41,8 +41,8 @@ final recoveryServiceProvider = Provider<RecoveryRemoteService>((ref) {
   return RecoveryRemoteService();
 });
 
-final supabaseAuthServiceProvider = Provider<SupabaseAuthService>((ref) {
-  return SupabaseAuthService();
+final myMailAuthServiceProvider = Provider<MyMailAuthService>((ref) {
+  return MyMailAuthService();
 });
 
 final vaultRepositoryProvider = Provider<VaultRepository>((ref) {
@@ -116,14 +116,14 @@ class AuthNotifier extends Notifier<AuthState> {
   late final BiometricService _biometricService;
   late final KeyStorageService _keyStorageService;
   late final RecoveryRemoteService _recoveryService;
-  late final SupabaseAuthService _supabaseAuthService;
+  late final MyMailAuthService _authService;
 
   @override
   AuthState build() {
     _biometricService = ref.read(biometricServiceProvider);
     _keyStorageService = ref.read(keyStorageServiceProvider);
     _recoveryService = ref.read(recoveryServiceProvider);
-    _supabaseAuthService = ref.read(supabaseAuthServiceProvider);
+    _authService = ref.read(myMailAuthServiceProvider);
 
     // Initial check
     Future.microtask(() => initialize());
@@ -145,30 +145,8 @@ class AuthNotifier extends Notifier<AuthState> {
     final screenCaptureEnabled = await _keyStorageService.getScreenCaptureProtectionEnabled();
     await ScreenProtectionService.setProtection(screenCaptureEnabled);
 
-    // 1. Check if returning from Google OAuth redirect on Web (hash fragment has access_token)
-    if (kIsWeb) {
-      final fragment = Uri.base.fragment;
-      if (fragment.isNotEmpty && fragment.contains('access_token=')) {
-        final webSession = await _supabaseAuthService.checkUrlFragmentSession(fragment);
-        if (webSession != null) {
-          state = state.copyWith(
-            status: AuthStatus.authenticated,
-            autoLockTimeout: timeout,
-            unlockedCategoryIds: {'cat_work', 'cat_personal', 'cat_business'},
-            isScreenCaptureProtectionEnabled: screenCaptureEnabled,
-            userEmail: webSession.email,
-            userDisplayName: webSession.displayName ?? webSession.email.split('@').first,
-            userPhotoUrl: webSession.avatarUrl,
-            isSignedIn: true,
-            lastActiveTime: DateTime.now(),
-          );
-          return;
-        }
-      }
-    }
-
-    // 2. Check if a previously authenticated Supabase session is stored locally
-    final session = await _supabaseAuthService.restoreSession();
+    // Check if an authenticated MyMail session is stored locally
+    final session = await _authService.restoreSession();
     if (session != null) {
       state = state.copyWith(
         status: AuthStatus.authenticated,
@@ -184,7 +162,7 @@ class AuthNotifier extends Notifier<AuthState> {
       return;
     }
 
-    // 3. Unauthenticated state
+    // Otherwise unauthenticated
     state = state.copyWith(
       status: AuthStatus.unauthenticated,
       autoLockTimeout: timeout,
@@ -197,24 +175,22 @@ class AuthNotifier extends Notifier<AuthState> {
     );
   }
 
-  /// Sign In with Google via Supabase OAuth (matching mangalorefoods.in flow)
+  /// Sign In with Google for MyMail
   Future<void> signInWithGoogle() async {
-    final authUrl = _supabaseAuthService.getGoogleOAuthUrl();
-    final uri = Uri.parse(authUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(
-        uri,
-        mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
-        webOnlyWindowName: '_self',
-      );
-    } else {
-      throw SupabaseAuthException('Could not launch Google authentication page.');
-    }
+    final session = await _authService.signInWithGoogle();
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      userEmail: session.email,
+      userDisplayName: session.displayName ?? 'Ankith Gangadhar',
+      userPhotoUrl: session.avatarUrl,
+      isSignedIn: true,
+      lastActiveTime: DateTime.now(),
+    );
   }
 
-  /// Sign In with Email & Password (verified against Supabase Auth)
+  /// Sign In with Email & Password (verified against stored credentials)
   Future<void> signInWithEmail(String email, String password) async {
-    final session = await _supabaseAuthService.signInWithPassword(
+    final session = await _authService.signInWithPassword(
       email: email,
       password: password,
     );
@@ -229,9 +205,9 @@ class AuthNotifier extends Notifier<AuthState> {
     );
   }
 
-  /// Create Account with Email & Password (stored in Supabase Auth)
+  /// Create Account with Email & Password (stored in MyMail secure vault)
   Future<void> signUpWithEmail(String email, String password, String name) async {
-    final session = await _supabaseAuthService.signUp(
+    final session = await _authService.signUp(
       email: email,
       password: password,
       name: name,
@@ -247,14 +223,14 @@ class AuthNotifier extends Notifier<AuthState> {
     );
   }
 
-  /// Forgot Password flow: sends reset instructions via Supabase
+  /// Forgot Password flow
   Future<void> sendPasswordReset(String email) async {
-    await _supabaseAuthService.sendPasswordReset(email);
+    await _authService.sendPasswordReset(email);
   }
 
   /// Sign Out: clears session and returns to login screen
   Future<void> signOut() async {
-    await _supabaseAuthService.clearSession();
+    await _authService.clearSession();
     try {
       await _recoveryService.signOut();
     } catch (_) {}

@@ -299,7 +299,7 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
                 style: const TextStyle(color: Color(0xFF191817)),
                 decoration: inputDecoration.copyWith(
                   labelText: 'Label or Account Name (Optional)',
-                  hintText: 'e.g. Mangalore Store, Google Workspace',
+                  hintText: 'e.g. Work Email, Personal Gmail',
                   prefixIcon: const Icon(Icons.tag_outlined, color: Color(0xFFFF5225)),
                 ),
               ),

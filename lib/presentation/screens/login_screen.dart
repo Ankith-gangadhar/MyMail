@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/datasources/supabase_auth_service.dart';
+import '../../data/datasources/mymail_auth_service.dart';
 import '../providers/vault_providers.dart';
 import '../widgets/glass_container.dart';
 
@@ -36,7 +36,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authNotifierProvider.notifier).signInWithGoogle();
     } catch (e) {
       if (mounted) {
-        final errorText = e is SupabaseAuthException
+        final errorText = e is MyMailAuthException
             ? e.message
             : e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -91,7 +91,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final errorText = e is SupabaseAuthException
+        final errorText = e is MyMailAuthException
             ? e.message
             : e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -165,7 +165,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Enter your registered email address and we will send you password reset instructions (same as mangalorefoods.in).',
+                'Enter your registered email address to reset your master vault password.',
                 style: TextStyle(
                   fontSize: 13.5,
                   color: Color(0xFF726F68),

@@ -68,7 +68,7 @@ class RecoveryRemoteService {
     }
   }
 
-  /// Signs in with standard Email and Password (matching mangalorefoods.in flow)
+  /// Signs in with standard Email and Password
   Future<UserCredential> signInWithEmail(String email, String password) async {
     return await _auth.signInWithEmailAndPassword(
       email: email.trim(),
@@ -92,7 +92,7 @@ class RecoveryRemoteService {
     return credential;
   }
 
-  /// Sends password reset email (matching mangalorefoods.in forgot password flow)
+  /// Sends password reset email
   Future<void> sendPasswordResetEmail(String email) async {
     await _auth.sendPasswordResetEmail(email: email.trim());
   }

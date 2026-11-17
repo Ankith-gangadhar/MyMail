@@ -14,7 +14,7 @@ class GoogleProfileAvatar extends StatelessWidget {
     this.size = 44,
   });
 
-  /// Extracts smart 2-letter initials (e.g. "Ankith Gangadhar" -> "AG", "Mangalore Store" -> "MS")
+  /// Extracts smart 2-letter initials (e.g. "Ankith Gangadhar" -> "AG", "Project Team" -> "PT")
   static String getInitials(String email, [String? label]) {
     // 1. Try from label if available and descriptive
     if (label != null && label.trim().isNotEmpty) {
@@ -23,7 +23,7 @@ class GoogleProfileAvatar extends StatelessWidget {
       if (words.length >= 2) {
         return (words[0][0] + words[1][0]).toUpperCase();
       }
-      // Check camelCase (e.g. "MangaloreStore")
+      // Check camelCase (e.g. "ProjectTeam")
       final camelMatches = RegExp(r'[A-Z]').allMatches(cleanLabel).map((m) => m.group(0)!).toList();
       if (camelMatches.length >= 2) {
         return (camelMatches[0] + camelMatches[1]).toUpperCase();
@@ -42,11 +42,8 @@ class GoogleProfileAvatar extends StatelessWidget {
         return (parts[0][0] + parts[1][0]).toUpperCase();
       }
 
-      // Check compound keywords like "mangalorestore" or "ankithgangadhar"
+      // Check compound keywords like "ankithgangadhar"
       final lower = localPart.toLowerCase();
-      if (lower.contains('mangalore') && lower.contains('store')) {
-        return 'MS';
-      }
       if (lower.contains('ankith') && lower.contains('gangadhar')) {
         return 'AG';
       }

@@ -75,9 +75,9 @@ class VaultRepositoryImpl implements VaultRepository {
       CredentialEntity(
         id: 'cred_work_2',
         categoryId: 'cat_work',
-        email: 'mangalorestore@gmail.com',
-        password: 'StoreSecret#992',
-        label: 'Mangalore Store',
+        email: 'projects.vault@gmail.com',
+        password: 'WorkSecurity#992',
+        label: 'Client Projects',
         createdAt: now,
         updatedAt: now,
       ),
