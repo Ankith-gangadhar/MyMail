@@ -52,10 +52,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           return 'Network error. Please check your internet connection.';
         case 'popup-closed-by-user':
           return 'Google sign-in was cancelled.';
+        case 'popup-blocked':
+          return 'Popup was blocked by your browser. Please allow popups for localhost.';
+        case 'unauthorized-domain':
+          return 'This domain is not authorized. Please make sure you open http://localhost:8080 (not 127.0.0.1).';
+        case 'operation-not-allowed':
+          return 'Google Sign-In is not enabled for this Firebase project.';
         default:
           final clean = error.message?.replaceAll(RegExp(r'\[.*?\]'), '').trim();
           if (clean != null && clean.isNotEmpty) return clean;
-          return 'Authentication failed. Please check your details and try again.';
+          return 'Authentication failed (${error.code}). Please try again.';
       }
     }
 

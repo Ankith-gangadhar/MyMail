@@ -35,6 +35,16 @@ class RecoveryRemoteService {
     }
   }
 
+  /// On Web, checks if a redirect sign-in just completed
+  Future<UserCredential?> getRedirectResult() async {
+    try {
+      if (kIsWeb) {
+        return await _auth.getRedirectResult();
+      }
+    } catch (_) {}
+    return null;
+  }
+
   /// Signs in using Google Sign-In and Firebase Auth.
   Future<UserCredential> signInWithGoogle() async {
     try {
@@ -42,7 +52,15 @@ class RecoveryRemoteService {
         final googleProvider = GoogleAuthProvider();
         googleProvider.addScope('email');
         googleProvider.addScope('profile');
-        return await _auth.signInWithPopup(googleProvider);
+        try {
+          return await _auth.signInWithPopup(googleProvider);
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'popup-blocked' || e.code == 'cancelled-popup-request') {
+            await _auth.signInWithRedirect(googleProvider);
+            return await _auth.getRedirectResult();
+          }
+          rethrow;
+        }
       }
 
       // Android / iOS native Google Sign-In

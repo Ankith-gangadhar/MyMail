@@ -12,7 +12,20 @@
           "package_name": "com.ankith.mymail.my_mail"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "575302675791-ivh1874nnvk1jl1298g004mhf1hctibu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ankith.mymail.my_mail",
+            "certificate_hash": "76b505c8ffc7723ae817df9d3ede01fd30d145de"
+          }
+        },
+        {
+          "client_id": "575302675791-c75snv54c7l78svld4vfchdgbdif17ri.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDpYAtz64GV5Sd6qyBBRpqN2dVecKOpkVw"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "575302675791-c75snv54c7l78svld4vfchdgbdif17ri.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

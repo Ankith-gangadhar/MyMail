@@ -145,6 +145,30 @@ class AuthNotifier extends Notifier<AuthState> {
     final screenCaptureEnabled = await _keyStorageService.getScreenCaptureProtectionEnabled();
     await ScreenProtectionService.setProtection(screenCaptureEnabled);
 
+    // 0. On Web, check if a redirect sign-in just completed
+    if (kIsWeb) {
+      try {
+        final redirectResult = await _recoveryService.getRedirectResult();
+        if (redirectResult?.user != null) {
+          final user = redirectResult!.user!;
+          state = state.copyWith(
+            status: AuthStatus.authenticated,
+            autoLockTimeout: timeout,
+            unlockedCategoryIds: {'cat_work', 'cat_personal', 'cat_business'},
+            isScreenCaptureProtectionEnabled: screenCaptureEnabled,
+            userEmail: user.email,
+            userDisplayName: user.displayName ?? user.email?.split('@').first,
+            userPhotoUrl: user.photoURL,
+            isSignedIn: true,
+            lastActiveTime: DateTime.now(),
+          );
+          return;
+        }
+      } catch (e) {
+        debugPrint('Web redirect auth check: $e');
+      }
+    }
+
     // 1. Check if Firebase Auth has an active user
     final currentUser = _recoveryService.currentUser;
     if (currentUser != null) {
