@@ -160,8 +160,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
 
-    final userEmail = authState.userEmail ?? 'ankith.gangadhar@gmail.com';
-    final userLabel = authState.userDisplayName ?? 'Ankith Gangadhar';
+    final userEmail = authState.userEmail ?? (authState.isSignedIn ? 'user@gmail.com' : 'guest@local');
+    final userLabel = authState.userDisplayName ?? (authState.isSignedIn ? 'MyMail User' : 'Guest');
 
     return Scaffold(
       backgroundColor: GlassColors.backgroundIvory,

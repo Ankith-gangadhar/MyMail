@@ -2,9 +2,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // User document: stores passphrase_wrap and preferences
+    // User document: stores user profile, categories and credentials strictly isolated per user session
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Scoped categories for this user
+      match /categories/{catId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Scoped credentials for this user
+      match /credentials/{credId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
 
       // Private subcollection containing recovery wrap and code hashes.
       // The client must NEVER read or write the recovery wrap or code hashes directly.

@@ -15,7 +15,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'ankith.gangadhar@gmail.com');
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
 
@@ -32,61 +32,60 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   String _getFriendlyAuthError(dynamic error) {
-    if (error is FirebaseAuthException) {
-      switch (error.code) {
-        case 'invalid-credential':
-        case 'wrong-password':
-        case 'user-not-found':
-          return 'Incorrect email or password. Please verify your details or sign up.';
-        case 'email-already-in-use':
-          return 'An account with this email already exists. Please sign in.';
-        case 'weak-password':
-          return 'Password must be at least 6 characters long.';
-        case 'invalid-email':
-          return 'Please enter a valid email address.';
-        case 'user-disabled':
-          return 'This account has been disabled. Please contact support.';
-        case 'too-many-requests':
-          return 'Too many attempts. Please wait a moment before trying again.';
-        case 'network-request-failed':
-          return 'Network error. Please check your internet connection.';
-        case 'popup-closed-by-user':
-          return 'Google sign-in was cancelled.';
-        case 'popup-blocked':
-          return 'Popup was blocked by your browser. Please allow popups for localhost.';
-        case 'unauthorized-domain':
-          return 'This domain is not authorized. Please make sure you open http://localhost:8080 (not 127.0.0.1).';
-        case 'operation-not-allowed':
-          return 'Google Sign-In is not enabled for this Firebase project.';
-        default:
-          final clean = error.message?.replaceAll(RegExp(r'\[.*?\]'), '').trim();
-          if (clean != null && clean.isNotEmpty) return clean;
-          return 'Authentication failed (${error.code}). Please try again.';
-      }
-    }
-
     if (error is MyMailAuthException) {
       return error.message;
     }
 
-    final raw = error.toString();
-    if (raw.contains('invalid-credential') || raw.contains('wrong-password') || raw.contains('user-not-found')) {
+    final raw = error.toString().toLowerCase();
+
+    if (raw.contains('invalid-credential') ||
+        raw.contains('wrong-password') ||
+        raw.contains('user-not-found') ||
+        raw.contains('incorrect, malformed or has expired') ||
+        raw.contains('auth credential is incorrect')) {
       return 'Incorrect email or password. Please verify your details or sign up.';
     }
     if (raw.contains('email-already-in-use')) {
       return 'An account with this email already exists. Please sign in.';
     }
-    if (raw.contains('weak-password')) {
+    if (raw.contains('weak-password') || raw.contains('password should be at least')) {
       return 'Password must be at least 6 characters long.';
     }
     if (raw.contains('invalid-email')) {
       return 'Please enter a valid email address.';
     }
+    if (raw.contains('user-disabled')) {
+      return 'This account has been disabled. Please contact support.';
+    }
+    if (raw.contains('too-many-requests')) {
+      return 'Too many attempts. Please wait a moment before trying again.';
+    }
     if (raw.contains('network-request-failed')) {
       return 'Network error. Please check your internet connection.';
     }
+    if (raw.contains('popup-closed-by-user')) {
+      return 'Google sign-in was cancelled.';
+    }
+    if (raw.contains('popup-blocked')) {
+      return 'Popup was blocked by your browser. Please allow popups for localhost.';
+    }
+    if (raw.contains('unauthorized-domain')) {
+      return 'This domain is not authorized. Please make sure you open http://localhost:8080 (not 127.0.0.1).';
+    }
+    if (raw.contains('operation-not-allowed')) {
+      return 'Sign-In provider is not enabled in Firebase Console.';
+    }
 
-    final clean = raw.replaceAll(RegExp(r'\[.*?\]'), '').replaceAll('Exception:', '').trim();
+    if (error is FirebaseAuthException && error.message != null) {
+      final clean = error.message!.replaceAll(RegExp(r'\[.*?\]'), '').trim();
+      if (clean.isNotEmpty) return clean;
+    }
+
+    final clean = error.toString()
+        .replaceAll(RegExp(r'\[.*?\]'), '')
+        .replaceAll('FirebaseAuthException:', '')
+        .replaceAll('Exception:', '')
+        .trim();
     return clean.isNotEmpty ? clean : 'Authentication failed. Please check your details and try again.';
   }
 

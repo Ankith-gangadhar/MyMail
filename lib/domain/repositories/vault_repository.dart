@@ -2,6 +2,12 @@ import '../entities/category_entity.dart';
 import '../entities/credential_entity.dart';
 
 abstract class VaultRepository {
+  /// Sets the active authenticated user/session ID to strictly isolate vault data
+  void setActiveUser(String? userId);
+
+  /// Clears active user session data and caches on logout
+  void clearActiveSession();
+
   Future<List<CategoryEntity>> getCategories();
   Future<CategoryEntity?> getCategoryById(String id);
   Future<void> saveCategory(CategoryEntity category);

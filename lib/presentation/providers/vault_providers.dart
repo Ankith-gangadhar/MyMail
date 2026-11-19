@@ -48,10 +48,15 @@ final myMailAuthServiceProvider = Provider<MyMailAuthService>((ref) {
 final vaultRepositoryProvider = Provider<VaultRepository>((ref) {
   final db = ref.watch(localDatabaseProvider);
   final keyStorage = ref.watch(keyStorageServiceProvider);
-  return VaultRepositoryImpl(
+  final userEmail = ref.watch(authNotifierProvider.select((s) => s.userEmail));
+  final isSignedIn = ref.watch(authNotifierProvider.select((s) => s.isSignedIn));
+  final repo = VaultRepositoryImpl(
     localDb: db,
     keyStorageService: keyStorage,
   );
+  final activeUser = userEmail ?? (isSignedIn ? 'auth_user' : 'guest');
+  repo.setActiveUser(activeUser);
+  return repo;
 });
 
 // Auth State
@@ -229,6 +234,10 @@ class AuthNotifier extends Notifier<AuthState> {
         isSignedIn: true,
         lastActiveTime: DateTime.now(),
       );
+      ref.invalidate(categoriesProvider);
+      ref.invalidate(credentialsProvider);
+      ref.invalidate(selectedCategoryProvider);
+      ref.invalidate(searchQueryProvider);
     } catch (e) {
       debugPrint('Google Sign-In note: $e');
       rethrow;
@@ -253,6 +262,10 @@ class AuthNotifier extends Notifier<AuthState> {
         isSignedIn: true,
         lastActiveTime: DateTime.now(),
       );
+      ref.invalidate(categoriesProvider);
+      ref.invalidate(credentialsProvider);
+      ref.invalidate(selectedCategoryProvider);
+      ref.invalidate(searchQueryProvider);
     } catch (e) {
       // Fallback check against local vault
       try {
@@ -268,6 +281,10 @@ class AuthNotifier extends Notifier<AuthState> {
           isSignedIn: true,
           lastActiveTime: DateTime.now(),
         );
+        ref.invalidate(categoriesProvider);
+        ref.invalidate(credentialsProvider);
+        ref.invalidate(selectedCategoryProvider);
+        ref.invalidate(searchQueryProvider);
         return;
       } catch (_) {}
       rethrow;
@@ -292,6 +309,10 @@ class AuthNotifier extends Notifier<AuthState> {
         isSignedIn: true,
         lastActiveTime: DateTime.now(),
       );
+      ref.invalidate(categoriesProvider);
+      ref.invalidate(credentialsProvider);
+      ref.invalidate(selectedCategoryProvider);
+      ref.invalidate(searchQueryProvider);
     } catch (e) {
       rethrow;
     }
@@ -307,6 +328,9 @@ class AuthNotifier extends Notifier<AuthState> {
     await _recoveryService.signOut();
     await _authService.clearSession();
 
+    final repo = ref.read(vaultRepositoryProvider);
+    repo.clearActiveSession();
+
     state = state.copyWith(
       status: AuthStatus.unauthenticated,
       isSignedIn: false,
@@ -314,6 +338,11 @@ class AuthNotifier extends Notifier<AuthState> {
       userDisplayName: null,
       userPhotoUrl: null,
     );
+
+    ref.invalidate(categoriesProvider);
+    ref.invalidate(credentialsProvider);
+    ref.invalidate(selectedCategoryProvider);
+    ref.invalidate(searchQueryProvider);
   }
 
   /// Continue as Guest / Offline Vault Access
@@ -325,6 +354,10 @@ class AuthNotifier extends Notifier<AuthState> {
       isSignedIn: false,
       lastActiveTime: DateTime.now(),
     );
+    ref.invalidate(categoriesProvider);
+    ref.invalidate(credentialsProvider);
+    ref.invalidate(selectedCategoryProvider);
+    ref.invalidate(searchQueryProvider);
   }
 
   Future<bool> unlockApp() async {

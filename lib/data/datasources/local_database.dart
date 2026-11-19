@@ -3,7 +3,7 @@ import 'package:sqflite/sqflite.dart';
 
 class LocalDatabase {
   static const String _dbName = 'mymail_vault.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
 
   Database? _db;
 
@@ -24,6 +24,7 @@ class LocalDatabase {
         await db.execute('''
           CREATE TABLE categories (
             id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL DEFAULT '',
             name TEXT NOT NULL,
             is_locked INTEGER NOT NULL DEFAULT 1,
             is_default INTEGER NOT NULL DEFAULT 0,
@@ -37,6 +38,7 @@ class LocalDatabase {
         await db.execute('''
           CREATE TABLE credentials (
             id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL DEFAULT '',
             category_id TEXT NOT NULL,
             email_cipher TEXT NOT NULL,
             email_nonce TEXT NOT NULL,
@@ -53,56 +55,15 @@ class LocalDatabase {
             FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE
           )
         ''');
-
-        // Prepopulate default categories: Work, Personal, and Business (unlocked by default)
-        final now = DateTime.now().toUtc().toIso8601String();
-        await db.insert('categories', {
-          'id': 'cat_work',
-          'name': 'Work',
-          'is_locked': 0,
-          'is_default': 1,
-          'sort_order': 0,
-          'created_at': now,
-          'updated_at': now,
-          'is_deleted': 0,
-        });
-
-        await db.insert('categories', {
-          'id': 'cat_personal',
-          'name': 'Personal',
-          'is_locked': 0,
-          'is_default': 1,
-          'sort_order': 1,
-          'created_at': now,
-          'updated_at': now,
-          'is_deleted': 0,
-        });
-
-        await db.insert('categories', {
-          'id': 'cat_business',
-          'name': 'Business',
-          'is_locked': 0,
-          'is_default': 1,
-          'sort_order': 2,
-          'created_at': now,
-          'updated_at': now,
-          'is_deleted': 0,
-        });
       },
-      onOpen: (db) async {
-        final existing = await db.query('categories', where: 'id = ?', whereArgs: ['cat_business']);
-        if (existing.isEmpty) {
-          final now = DateTime.now().toUtc().toIso8601String();
-          await db.insert('categories', {
-            'id': 'cat_business',
-            'name': 'Business',
-            'is_locked': 0,
-            'is_default': 1,
-            'sort_order': 2,
-            'created_at': now,
-            'updated_at': now,
-            'is_deleted': 0,
-          });
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          try {
+            await db.execute('ALTER TABLE categories ADD COLUMN user_id TEXT NOT NULL DEFAULT ""');
+          } catch (_) {}
+          try {
+            await db.execute('ALTER TABLE credentials ADD COLUMN user_id TEXT NOT NULL DEFAULT ""');
+          } catch (_) {}
         }
       },
     );

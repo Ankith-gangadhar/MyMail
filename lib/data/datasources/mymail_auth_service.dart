@@ -205,8 +205,8 @@ class MyMailAuthService {
   }) async {
     final userEmail = (email != null && email.isNotEmpty)
         ? email.trim().toLowerCase()
-        : 'ankith.gangadhar@gmail.com';
-    final name = displayName ?? 'Ankith Gangadhar';
+        : 'user@gmail.com';
+    final name = displayName ?? (userEmail.split('@').first);
 
     final session = MyMailUserSession(
       id: _uuid.v4(),

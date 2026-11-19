@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../core/crypto/aes_gcm_service.dart';
@@ -12,10 +14,12 @@ class VaultRepositoryImpl implements VaultRepository {
   final AesGcmService _aesGcmService;
   final KeyStorageService _keyStorageService;
 
-  // In-memory data store for Web preview & immediate offline testing
-  final List<CategoryEntity> _memoryCategories = [];
-  final List<CredentialEntity> _memoryCredentials = [];
-  bool _memoryInitialized = false;
+  // Active user identity for strict session/tenant data isolation
+  String _activeUserId = 'guest';
+
+  // In-memory data store strictly scoped per user session (e.g., userEmail or UID)
+  final Map<String, List<CategoryEntity>> _userCategories = {};
+  final Map<String, List<CredentialEntity>> _userCredentials = {};
 
   VaultRepositoryImpl({
     LocalDatabase? localDb,
@@ -23,16 +27,34 @@ class VaultRepositoryImpl implements VaultRepository {
     KeyStorageService? keyStorageService,
   })  : _localDb = localDb ?? LocalDatabase(),
         _aesGcmService = aesGcmService ?? AesGcmService(),
-        _keyStorageService = keyStorageService ?? KeyStorageService() {
-    _initMemoryData();
+        _keyStorageService = keyStorageService ?? KeyStorageService();
+
+  @override
+  void setActiveUser(String? userId) {
+    final clean = userId?.trim().toLowerCase();
+    _activeUserId = (clean != null && clean.isNotEmpty) ? clean : 'guest';
   }
 
-  void _initMemoryData() {
-    if (_memoryInitialized) return;
-    _memoryInitialized = true;
+  @override
+  void clearActiveSession() {
+    _activeUserId = 'guest';
+    _userCategories.clear();
+    _userCredentials.clear();
+  }
 
+  String? get _firebaseUid {
+    try {
+      return FirebaseAuth.instance.currentUser?.uid;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+
+  List<CategoryEntity> _getDefaultCategories() {
     final now = DateTime.now().toUtc();
-    _memoryCategories.addAll([
+    return [
       CategoryEntity(
         id: 'cat_work',
         name: 'Work',
@@ -60,128 +82,123 @@ class VaultRepositoryImpl implements VaultRepository {
         createdAt: now,
         updatedAt: now,
       ),
-    ]);
+    ];
+  }
 
-    _memoryCredentials.addAll([
-      CredentialEntity(
-        id: 'cred_work_1',
-        categoryId: 'cat_work',
-        email: 'ankith.gangadhar@gmail.com',
-        password: 'WorkSecurity#2026!',
-        label: 'Ankith Gangadhar',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      CredentialEntity(
-        id: 'cred_work_2',
-        categoryId: 'cat_work',
-        email: 'projects.vault@gmail.com',
-        password: 'WorkSecurity#992',
-        label: 'Client Projects',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      CredentialEntity(
-        id: 'cred_personal_1',
-        categoryId: 'cat_personal',
-        email: 'ankith.gangadhar@gmail.com',
-        password: 'PersonalSecret#882',
-        label: 'Ankith Gangadhar',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      CredentialEntity(
-        id: 'cred_personal_2',
-        categoryId: 'cat_personal',
-        email: 'stream.user@gmail.com',
-        password: 'StreamPass!2026',
-        label: 'Netflix & Spotify',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      CredentialEntity(
-        id: 'cred_business_1',
-        categoryId: 'cat_business',
-        email: 'contact@mybusiness.com',
-        password: 'BizVenture#771',
-        label: 'Business Admin',
-        createdAt: now,
-        updatedAt: now,
-      ),
-    ]);
+  List<CredentialEntity> _getCredentialsForActiveUser() {
+    return _userCredentials.putIfAbsent(_activeUserId, () => []);
   }
 
   Future<String> _getKey() => _keyStorageService.getOrCreateMasterKey();
 
   @override
   Future<List<CategoryEntity>> getCategories() async {
-    if (kIsWeb) {
-      return _memoryCategories.where((c) => !c.isDeleted).toList();
+    final uid = _firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        final snapshot = await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('categories')
+            .where('is_deleted', isEqualTo: 0)
+            .get();
+
+        if (snapshot.docs.isNotEmpty) {
+          final list = snapshot.docs
+              .map((d) => CategoryEntity.fromMap(d.data()))
+              .toList();
+          list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+          _userCategories[_activeUserId] = list;
+          return list;
+        } else {
+          // Initialize default categories for this user in Firestore
+          final defaults = _getDefaultCategories();
+          for (final cat in defaults) {
+            await _firestore
+                .collection('users')
+                .doc(uid)
+                .collection('categories')
+                .doc(cat.id)
+                .set(cat.toMap(), SetOptions(merge: true));
+          }
+          _userCategories[_activeUserId] = defaults;
+          return defaults;
+        }
+      } catch (e) {
+        debugPrint('Firestore getCategories note: $e');
+      }
     }
+
+    if (kIsWeb) {
+      final list = _userCategories.putIfAbsent(_activeUserId, () => _getDefaultCategories());
+      return list.where((c) => !c.isDeleted).toList();
+    }
+
     try {
       final db = await _localDb.database;
       final rows = await db.query(
         'categories',
-        where: 'is_deleted = ?',
-        whereArgs: [0],
+        where: 'user_id = ? AND is_deleted = ?',
+        whereArgs: [_activeUserId, 0],
         orderBy: 'sort_order ASC, created_at ASC',
       );
 
       if (rows.isNotEmpty) {
-        return rows.map((r) => CategoryEntity.fromMap(r)).toList();
+        final list = rows.map((r) => CategoryEntity.fromMap(r)).toList();
+        _userCategories[_activeUserId] = list;
+        return list;
       }
-      return _memoryCategories.where((c) => !c.isDeleted).toList();
+
+      // If empty for this user, seed default categories for this user
+      final defaults = _getDefaultCategories();
+      for (final cat in defaults) {
+        final map = cat.toMap();
+        map['user_id'] = _activeUserId;
+        await db.insert('categories', map, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      _userCategories[_activeUserId] = defaults;
+      return defaults;
     } catch (_) {
-      return _memoryCategories.where((c) => !c.isDeleted).toList();
+      final list = _userCategories.putIfAbsent(_activeUserId, () => _getDefaultCategories());
+      return list.where((c) => !c.isDeleted).toList();
     }
   }
 
   @override
   Future<CategoryEntity?> getCategoryById(String id) async {
-    if (kIsWeb) {
-      try {
-        return _memoryCategories.firstWhere(
-          (c) => c.id == id && !c.isDeleted,
-        );
-      } catch (_) {
-        return null;
-      }
-    }
+    final categories = await getCategories();
     try {
-      final db = await _localDb.database;
-      final rows = await db.query(
-        'categories',
-        where: 'id = ? AND is_deleted = ?',
-        whereArgs: [id, 0],
-        limit: 1,
-      );
-
-      if (rows.isNotEmpty) {
-        return CategoryEntity.fromMap(rows.first);
-      }
-      try {
-        return _memoryCategories.firstWhere((c) => c.id == id);
-      } catch (_) {
-        return null;
-      }
+      return categories.firstWhere((c) => c.id == id && !c.isDeleted);
     } catch (_) {
-      try {
-        return _memoryCategories.firstWhere((c) => c.id == id);
-      } catch (_) {
-        return null;
-      }
+      return null;
     }
   }
 
   @override
   Future<void> saveCategory(CategoryEntity category) async {
-    _memoryCategories.removeWhere((c) => c.id == category.id);
-    _memoryCategories.add(category);
+    final categories = _userCategories.putIfAbsent(_activeUserId, () => _getDefaultCategories());
+    categories.removeWhere((c) => c.id == category.id);
+    categories.add(category);
+
+    final uid = _firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('categories')
+            .doc(category.id)
+            .set(category.toMap(), SetOptions(merge: true));
+      } catch (e) {
+        debugPrint('Firestore saveCategory note: $e');
+      }
+    }
 
     if (!kIsWeb) {
       try {
         final db = await _localDb.database;
         final map = category.toMap();
+        map['user_id'] = _activeUserId;
         await db.insert(
           'categories',
           map,
@@ -193,13 +210,33 @@ class VaultRepositoryImpl implements VaultRepository {
 
   @override
   Future<void> deleteCategory(String id) async {
-    final idx = _memoryCategories.indexWhere((c) => c.id == id);
+    final categories = _userCategories.putIfAbsent(_activeUserId, () => _getDefaultCategories());
+    final idx = categories.indexWhere((c) => c.id == id);
     if (idx != -1) {
-      _memoryCategories[idx] = _memoryCategories[idx].copyWith(isDeleted: true);
+      categories[idx] = categories[idx].copyWith(isDeleted: true);
     }
-    for (int i = 0; i < _memoryCredentials.length; i++) {
-      if (_memoryCredentials[i].categoryId == id) {
-        _memoryCredentials[i] = _memoryCredentials[i].copyWith(isDeleted: true);
+
+    final userCreds = _getCredentialsForActiveUser();
+    for (int i = 0; i < userCreds.length; i++) {
+      if (userCreds[i].categoryId == id) {
+        userCreds[i] = userCreds[i].copyWith(isDeleted: true);
+      }
+    }
+
+    final uid = _firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('categories')
+            .doc(id)
+            .update({
+          'is_deleted': 1,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        });
+      } catch (e) {
+        debugPrint('Firestore deleteCategory note: $e');
       }
     }
 
@@ -211,14 +248,14 @@ class VaultRepositoryImpl implements VaultRepository {
           await txn.update(
             'categories',
             {'is_deleted': 1, 'updated_at': now},
-            where: 'id = ?',
-            whereArgs: [id],
+            where: 'user_id = ? AND id = ?',
+            whereArgs: [_activeUserId, id],
           );
           await txn.update(
             'credentials',
             {'is_deleted': 1, 'updated_at': now},
-            where: 'category_id = ?',
-            whereArgs: [id],
+            where: 'user_id = ? AND category_id = ?',
+            whereArgs: [_activeUserId, id],
           );
         });
       } catch (_) {}
@@ -227,13 +264,30 @@ class VaultRepositoryImpl implements VaultRepository {
 
   @override
   Future<void> reorderCategories(List<String> categoryIds) async {
+    final categories = _userCategories.putIfAbsent(_activeUserId, () => _getDefaultCategories());
     for (int i = 0; i < categoryIds.length; i++) {
-      final idx = _memoryCategories.indexWhere((c) => c.id == categoryIds[i]);
+      final idx = categories.indexWhere((c) => c.id == categoryIds[i]);
       if (idx != -1) {
-        _memoryCategories[idx] = _memoryCategories[idx].copyWith(sortOrder: i);
+        categories[idx] = categories[idx].copyWith(sortOrder: i);
       }
     }
-    _memoryCategories.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    categories.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+    final uid = _firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        for (int i = 0; i < categoryIds.length; i++) {
+          await _firestore
+              .collection('users')
+              .doc(uid)
+              .collection('categories')
+              .doc(categoryIds[i])
+              .update({'sort_order': i});
+        }
+      } catch (e) {
+        debugPrint('Firestore reorderCategories note: $e');
+      }
+    }
 
     if (!kIsWeb) {
       try {
@@ -244,8 +298,8 @@ class VaultRepositoryImpl implements VaultRepository {
             await txn.update(
               'categories',
               {'sort_order': i, 'updated_at': now},
-              where: 'id = ?',
-              whereArgs: [categoryIds[i]],
+              where: 'user_id = ? AND id = ?',
+              whereArgs: [_activeUserId, categoryIds[i]],
             );
           }
         });
@@ -255,19 +309,47 @@ class VaultRepositoryImpl implements VaultRepository {
 
   @override
   Future<List<CredentialEntity>> getCredentialsByCategory(String categoryId) async {
+    final uid = _firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        final snapshot = await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('credentials')
+            .where('categoryId', isEqualTo: categoryId)
+            .where('isDeleted', isEqualTo: false)
+            .get();
+
+        final list = snapshot.docs
+            .map((d) => CredentialEntity.fromJson(d.data()))
+            .toList();
+        list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+        final userCreds = _getCredentialsForActiveUser();
+        userCreds.removeWhere((c) => c.categoryId == categoryId);
+        userCreds.addAll(list);
+
+        return list;
+      } catch (e) {
+        debugPrint('Firestore getCredentialsByCategory note: $e');
+      }
+    }
+
     if (kIsWeb) {
-      return _memoryCredentials
+      final userCreds = _getCredentialsForActiveUser();
+      return userCreds
           .where((c) => c.categoryId == categoryId && !c.isDeleted)
           .toList();
     }
+
     try {
       final db = await _localDb.database;
       final key = await _getKey();
 
       final rows = await db.query(
         'credentials',
-        where: 'category_id = ? AND is_deleted = ?',
-        whereArgs: [categoryId, 0],
+        where: 'user_id = ? AND category_id = ? AND is_deleted = ?',
+        whereArgs: [_activeUserId, categoryId, 0],
         orderBy: 'updated_at DESC',
       );
 
@@ -318,12 +400,15 @@ class VaultRepositoryImpl implements VaultRepository {
           ));
         } catch (_) {}
       }
-      if (list.isNotEmpty) return list;
-      return _memoryCredentials
-          .where((c) => c.categoryId == categoryId && !c.isDeleted)
-          .toList();
+
+      final userCreds = _getCredentialsForActiveUser();
+      userCreds.removeWhere((c) => c.categoryId == categoryId);
+      userCreds.addAll(list);
+
+      return list;
     } catch (_) {
-      return _memoryCredentials
+      final userCreds = _getCredentialsForActiveUser();
+      return userCreds
           .where((c) => c.categoryId == categoryId && !c.isDeleted)
           .toList();
     }
@@ -331,17 +416,41 @@ class VaultRepositoryImpl implements VaultRepository {
 
   @override
   Future<List<CredentialEntity>> getAllCredentials() async {
-    if (kIsWeb) {
-      return _memoryCredentials.where((c) => !c.isDeleted).toList();
+    final uid = _firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        final snapshot = await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('credentials')
+            .where('isDeleted', isEqualTo: false)
+            .get();
+
+        final list = snapshot.docs
+            .map((d) => CredentialEntity.fromJson(d.data()))
+            .toList();
+        list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+        _userCredentials[_activeUserId] = list;
+        return list;
+      } catch (e) {
+        debugPrint('Firestore getAllCredentials note: $e');
+      }
     }
+
+    if (kIsWeb) {
+      final userCreds = _getCredentialsForActiveUser();
+      return userCreds.where((c) => !c.isDeleted).toList();
+    }
+
     try {
       final db = await _localDb.database;
       final key = await _getKey();
 
       final rows = await db.query(
         'credentials',
-        where: 'is_deleted = ?',
-        whereArgs: [0],
+        where: 'user_id = ? AND is_deleted = ?',
+        whereArgs: [_activeUserId, 0],
         orderBy: 'updated_at DESC',
       );
 
@@ -392,17 +501,34 @@ class VaultRepositoryImpl implements VaultRepository {
           ));
         } catch (_) {}
       }
-      if (list.isNotEmpty) return list;
-      return _memoryCredentials.where((c) => !c.isDeleted).toList();
+
+      _userCredentials[_activeUserId] = list;
+      return list;
     } catch (_) {
-      return _memoryCredentials.where((c) => !c.isDeleted).toList();
+      final userCreds = _getCredentialsForActiveUser();
+      return userCreds.where((c) => !c.isDeleted).toList();
     }
   }
 
   @override
   Future<void> saveCredential(CredentialEntity credential) async {
-    _memoryCredentials.removeWhere((c) => c.id == credential.id);
-    _memoryCredentials.insert(0, credential);
+    final userCreds = _getCredentialsForActiveUser();
+    userCreds.removeWhere((c) => c.id == credential.id);
+    userCreds.insert(0, credential);
+
+    final uid = _firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('credentials')
+            .doc(credential.id)
+            .set(credential.toJson(), SetOptions(merge: true));
+      } catch (e) {
+        debugPrint('Firestore saveCredential note: $e');
+      }
+    }
 
     if (!kIsWeb) {
       try {
@@ -429,6 +555,7 @@ class VaultRepositoryImpl implements VaultRepository {
 
         final row = {
           'id': credential.id,
+          'user_id': _activeUserId,
           'category_id': credential.categoryId,
           'email_cipher': emailEnc.ciphertextBase64,
           'email_nonce': emailEnc.nonceBase64,
@@ -455,9 +582,27 @@ class VaultRepositoryImpl implements VaultRepository {
 
   @override
   Future<void> deleteCredential(String id) async {
-    final idx = _memoryCredentials.indexWhere((c) => c.id == id);
+    final userCreds = _getCredentialsForActiveUser();
+    final idx = userCreds.indexWhere((c) => c.id == id);
     if (idx != -1) {
-      _memoryCredentials[idx] = _memoryCredentials[idx].copyWith(isDeleted: true);
+      userCreds[idx] = userCreds[idx].copyWith(isDeleted: true);
+    }
+
+    final uid = _firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('credentials')
+            .doc(id)
+            .set({
+          'isDeleted': true,
+          'updatedAt': DateTime.now().toUtc().toIso8601String(),
+        }, SetOptions(merge: true));
+      } catch (e) {
+        debugPrint('Firestore deleteCredential note: $e');
+      }
     }
 
     if (!kIsWeb) {
@@ -467,8 +612,8 @@ class VaultRepositoryImpl implements VaultRepository {
         await db.update(
           'credentials',
           {'is_deleted': 1, 'updated_at': now},
-          where: 'id = ?',
-          whereArgs: [id],
+          where: 'user_id = ? AND id = ?',
+          whereArgs: [_activeUserId, id],
         );
       } catch (_) {}
     }
@@ -481,40 +626,14 @@ class VaultRepositoryImpl implements VaultRepository {
     required bool replace,
   }) async {
     if (replace) {
-      _memoryCategories.clear();
-      _memoryCredentials.clear();
+      _userCategories[_activeUserId]?.clear();
+      _userCredentials[_activeUserId]?.clear();
     }
     for (final cat in categories) {
-      _memoryCategories.removeWhere((c) => c.id == cat.id);
-      _memoryCategories.add(cat);
+      await saveCategory(cat);
     }
     for (final cred in credentials) {
-      _memoryCredentials.removeWhere((c) => c.id == cred.id);
-      _memoryCredentials.add(cred);
-    }
-
-    if (!kIsWeb) {
-      try {
-        final db = await _localDb.database;
-        await db.transaction((txn) async {
-          if (replace) {
-            await txn.delete('credentials');
-            await txn.delete('categories');
-          }
-
-          for (final cat in categories) {
-            await txn.insert(
-              'categories',
-              cat.toMap(),
-              conflictAlgorithm: ConflictAlgorithm.replace,
-            );
-          }
-        });
-
-        for (final cred in credentials) {
-          await saveCredential(cred);
-        }
-      } catch (_) {}
+      await saveCredential(cred);
     }
   }
 }
