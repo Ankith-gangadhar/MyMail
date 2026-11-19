@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:my_mail/domain/entities/category_entity.dart';
 import 'package:my_mail/domain/entities/credential_entity.dart';
+import 'package:my_mail/presentation/widgets/google_profile_avatar.dart';
 
 void main() {
   group('Entity & Data Model Contract Unit Tests', () {
@@ -56,6 +57,25 @@ void main() {
 
       final softDeleted = credential.copyWith(isDeleted: true);
       expect(softDeleted.isDeleted, isTrue);
+    });
+
+    test('GoogleProfileAvatar.getInitials derives initials strictly from email, not from label', () {
+      // User's exact reported cases:
+      expect(GoogleProfileAvatar.getInitials('ankithmanjesh@gmail.com', 'Gmail'), equals('AM'));
+      expect(GoogleProfileAvatar.getInitials('ankithgangaclassic@gmail.com', 'Account'), equals('AG'));
+      
+      // Delimited emails:
+      expect(GoogleProfileAvatar.getInitials('ankith.gangadhar@gmail.com', 'Work'), equals('AG'));
+      expect(GoogleProfileAvatar.getInitials('stream.user@gmail.com', 'Netflix'), equals('SU'));
+      expect(GoogleProfileAvatar.getInitials('john_doe@gmail.com', 'Personal'), equals('JD'));
+      expect(GoogleProfileAvatar.getInitials('user-service@gmail.com', 'AWS'), equals('US'));
+      
+      // Concatenated names:
+      expect(GoogleProfileAvatar.getInitials('johnsmith@gmail.com', 'Email'), equals('JS'));
+      expect(GoogleProfileAvatar.getInitials('rahulsharma@gmail.com', 'Work'), equals('RS'));
+      
+      // Fallback 2-letter:
+      expect(GoogleProfileAvatar.getInitials('service@gmail.com', 'Cloud'), equals('SE'));
     });
   });
 }

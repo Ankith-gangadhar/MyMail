@@ -84,12 +84,14 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
     final isEditing = widget.existingCredential != null;
     final now = DateTime.now().toUtc();
 
+    final label = _labelController.text.trim();
+
     final credential = isEditing
         ? widget.existingCredential!.copyWith(
             categoryId: _selectedCategoryId,
             email: _emailController.text.trim(),
             password: _passwordController.text,
-            label: _labelController.text.trim().isEmpty ? null : _labelController.text.trim(),
+            label: label,
             updatedAt: now,
           )
         : CredentialEntity(
@@ -97,7 +99,7 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
             categoryId: _selectedCategoryId,
             email: _emailController.text.trim(),
             password: _passwordController.text,
-            label: _labelController.text.trim().isEmpty ? null : _labelController.text.trim(),
+            label: label,
             createdAt: now,
             updatedAt: now,
             isDeleted: false,
@@ -293,15 +295,22 @@ class _CredentialFormSheetState extends ConsumerState<CredentialFormSheet> {
               ),
               const SizedBox(height: 16),
 
-              // Optional Label Input
+              // Compulsory Account / App Label Input
               TextFormField(
                 controller: _labelController,
+                textCapitalization: TextCapitalization.words,
                 style: const TextStyle(color: Color(0xFF191817)),
                 decoration: inputDecoration.copyWith(
-                  labelText: 'Label or Account Name (Optional)',
-                  hintText: 'e.g. Work Email, Personal Gmail',
-                  prefixIcon: const Icon(Icons.tag_outlined, color: Color(0xFFFF5225)),
+                  labelText: 'Account / App Name *',
+                  hintText: 'e.g. Gmail, Netflix, Work, GitHub, Amazon',
+                  prefixIcon: const Icon(Icons.label_outline_rounded, color: Color(0xFFFF5225)),
                 ),
+                validator: (val) {
+                  if (val == null || val.trim().isEmpty) {
+                    return 'Please enter an account or app name (e.g. Gmail, Netflix)';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 26),
 

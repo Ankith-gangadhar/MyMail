@@ -16,53 +16,54 @@ class GoogleProfileAvatar extends StatelessWidget {
     this.size = 44,
   });
 
-  /// Extracts smart 2-letter initials (e.g. "Ankith Gangadhar" -> "AG", "Project Team" -> "PT")
-  static String getInitials(String email, [String? label]) {
-    // 1. Try from label if available and descriptive
-    if (label != null && label.trim().isNotEmpty) {
-      final cleanLabel = label.trim();
-      final words = cleanLabel.split(RegExp(r'[\s._\-]+')).where((w) => w.isNotEmpty).toList();
-      if (words.length >= 2) {
-        return (words[0][0] + words[1][0]).toUpperCase();
-      }
-      // Check camelCase (e.g. "ProjectTeam")
-      final camelMatches = RegExp(r'[A-Z]').allMatches(cleanLabel).map((m) => m.group(0)!).toList();
-      if (camelMatches.length >= 2) {
-        return (camelMatches[0] + camelMatches[1]).toUpperCase();
-      }
-      if (cleanLabel.length >= 2) {
-        return cleanLabel.substring(0, 2).toUpperCase();
+  /// Extracts smart 2-letter initials strictly from the email address
+  /// (e.g. "ankithmanjesh@gmail.com" -> "AM", "ankithgangaclassic@gmail.com" -> "AG",
+  ///       "ankith.gangadhar@gmail.com" -> "AG", "stream.user@gmail.com" -> "SU")
+  /// Label is never used for avatar initials.
+  static String getInitials(String email, [String? _]) {
+    final clean = email.trim().toLowerCase();
+    final localPart = clean.contains('@') ? clean.split('@').first.trim() : clean;
+    if (localPart.isEmpty) return 'M';
+
+    // 1. Check delimited by dots, dashes, underscores, plus, or numbers
+    // e.g. "ankith.gangadhar@gmail.com" -> "AG", "stream.user@gmail.com" -> "SU"
+    final parts = localPart.split(RegExp(r'[._\-+0-9]+')).where((p) => p.isNotEmpty).toList();
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+
+    // 2. Check camelCase in raw email username (e.g. "AnkithManjesh@gmail.com" -> "AM")
+    final rawLocal = email.contains('@') ? email.split('@').first.trim() : email.trim();
+    final camelMatches = RegExp(r'[A-Z]').allMatches(rawLocal).map((m) => m.group(0)!).toList();
+    if (camelMatches.length >= 2) {
+      return (camelMatches[0] + camelMatches[1]).toUpperCase();
+    }
+
+    // 3. Smart concatenated name detection for common first-name prefixes
+    // e.g. "ankithmanjesh" -> "AM", "ankithgangaclassic" -> "AG", "johnsmith" -> "JS"
+    const commonPrefixes = [
+      'ankith', 'ankit', 'manjesh', 'gangadhar', 'ganga',
+      'rahul', 'rohit', 'varun', 'tarun', 'arun', 'john',
+      'alex', 'david', 'priya', 'sneha', 'neha', 'amit',
+      'vijay', 'ajay', 'sanjay', 'deepak', 'manoj', 'kiran',
+      'karan', 'nikhil', 'prashanth', 'prashant', 'praveen',
+      'suresh', 'ramesh', 'mahesh', 'vikram', 'aditya',
+      'siddharth', 'sid', 'sam', 'tom', 'dan', 'ben', 'chris',
+      'mike', 'steve', 'mark', 'paul', 'james', 'peter'
+    ];
+
+    for (final prefix in commonPrefixes) {
+      if (localPart.startsWith(prefix) && localPart.length > prefix.length) {
+        final remainder = localPart.substring(prefix.length);
+        return (prefix[0] + remainder[0]).toUpperCase();
       }
     }
 
-    // 2. Try from email address username
-    final localPart = email.split('@').first.trim();
-    if (localPart.isNotEmpty) {
-      // Check delimited by dots, dashes, underscores (e.g. ankith.gangadhar -> AG)
-      final parts = localPart.split(RegExp(r'[._\-]')).where((p) => p.isNotEmpty).toList();
-      if (parts.length >= 2) {
-        return (parts[0][0] + parts[1][0]).toUpperCase();
-      }
-
-      // Check compound keywords like "ankithgangadhar"
-      final lower = localPart.toLowerCase();
-      if (lower.contains('ankith') && lower.contains('gangadhar')) {
-        return 'AG';
-      }
-
-      // Check camelCase in email
-      final camelMatches = RegExp(r'[A-Z]').allMatches(localPart).map((m) => m.group(0)!).toList();
-      if (camelMatches.length >= 2) {
-        return (camelMatches[0] + camelMatches[1]).toUpperCase();
-      }
-
-      if (localPart.length >= 2) {
-        return localPart.substring(0, 2).toUpperCase();
-      }
-      return localPart[0].toUpperCase();
+    // 4. Default: first 2 letters of localPart
+    if (localPart.length >= 2) {
+      return localPart.substring(0, 2).toUpperCase();
     }
-
-    return 'M';
+    return localPart[0].toUpperCase();
   }
 
   String? get _photoUrl {
@@ -76,7 +77,7 @@ class GoogleProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials = getInitials(email, label);
+    final initials = getInitials(email);
     final photo = _photoUrl;
 
     Widget monogramWidget = Container(

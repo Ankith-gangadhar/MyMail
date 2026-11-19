@@ -135,21 +135,18 @@ class _CredentialCardState extends State<CredentialCard>
                       children: [
                         Row(
                           children: [
-                            // Google Profile Photo or Smart Initials
+                            // Profile avatar monogram strictly derived from email address
                             GoogleProfileAvatar(
                               email: widget.credential.email,
-                              label: widget.credential.label,
                               size: 36,
                             ),
                             const SizedBox(width: 12),
 
-                            // Optional Label / Name beside avatar
+                            // Application / Account Label beside avatar
                             Expanded(
                               child: Text(
                                 (widget.credential.label != null &&
-                                        widget.credential.label!.trim().isNotEmpty &&
-                                        widget.credential.label!.trim().toLowerCase() !=
-                                            widget.credential.email.trim().toLowerCase())
+                                        widget.credential.label!.trim().isNotEmpty)
                                     ? widget.credential.label!.trim()
                                     : 'Account',
                                 style: const TextStyle(
