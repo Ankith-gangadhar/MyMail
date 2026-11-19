@@ -82,6 +82,13 @@ class AppTheme {
         elevation: 6,
         shape: CircleBorder(),
       ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+      ),
     );
   }
 

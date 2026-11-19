@@ -29,7 +29,12 @@ class ClipboardService {
           behavior: SnackBarBehavior.floating,
           duration: const Duration(milliseconds: 1800),
           padding: EdgeInsets.zero,
-          width: 220,
+          width: 190,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+            side: BorderSide.none,
+          ),
           content: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
@@ -43,29 +48,17 @@ class ClipboardService {
               ),
               borderRadius: BorderRadius.circular(30),
               border: Border.all(
-                color: const Color(0xFFFF5225).withOpacity(0.38),
+                color: const Color(0xFFFF5225).withOpacity(0.40),
                 width: 1.2,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.55),
-                  blurRadius: 18,
-                  offset: const Offset(0, 6),
-                ),
-                BoxShadow(
-                  color: const Color(0xFFFF5225).withOpacity(0.18),
-                  blurRadius: 14,
-                  spreadRadius: -2,
-                ),
-              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 26,
-                  height: 26,
+                  width: 24,
+                  height: 24,
                   decoration: const BoxDecoration(
                     color: Color(0x28FF5225), // Translucent electric ember orange
                     shape: BoxShape.circle,
@@ -76,11 +69,11 @@ class ClipboardService {
                           ? Icons.mark_email_read_rounded
                           : (isPassword ? Icons.vpn_key_rounded : Icons.check_rounded),
                       color: const Color(0xFFFF5225),
-                      size: 15,
+                      size: 14,
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 9),
                 Flexible(
                   child: Text(
                     message,
@@ -88,7 +81,7 @@ class ClipboardService {
                       color: Colors.white,
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
+                      letterSpacing: 0.2,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

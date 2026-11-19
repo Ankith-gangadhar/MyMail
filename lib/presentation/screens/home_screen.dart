@@ -313,7 +313,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'All Your Passwords',
+                    'Passwords',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
