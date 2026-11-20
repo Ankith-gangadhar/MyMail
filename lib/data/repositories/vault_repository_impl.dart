@@ -109,6 +109,7 @@ class VaultRepositoryImpl implements VaultRepository {
               .toList();
           list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
           _userCategories[_activeUserId] = list;
+          _cacheCategoriesLocally(list);
           return list;
         } else {
           // Initialize default categories for this user in Firestore
@@ -122,6 +123,7 @@ class VaultRepositoryImpl implements VaultRepository {
                 .set(cat.toMap(), SetOptions(merge: true));
           }
           _userCategories[_activeUserId] = defaults;
+          _cacheCategoriesLocally(defaults);
           return defaults;
         }
       } catch (e) {
@@ -328,6 +330,7 @@ class VaultRepositoryImpl implements VaultRepository {
         final userCreds = _getCredentialsForActiveUser();
         userCreds.removeWhere((c) => c.categoryId == categoryId);
         userCreds.addAll(list);
+        _cacheCredentialsLocally(list);
 
         return list;
       } catch (e) {
@@ -432,6 +435,7 @@ class VaultRepositoryImpl implements VaultRepository {
         list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
         _userCredentials[_activeUserId] = list;
+        _cacheCredentialsLocally(list);
         return list;
       } catch (e) {
         debugPrint('Firestore getAllCredentials note: $e');
@@ -635,5 +639,60 @@ class VaultRepositoryImpl implements VaultRepository {
     for (final cred in credentials) {
       await saveCredential(cred);
     }
+  }
+
+  Future<void> _cacheCategoriesLocally(List<CategoryEntity> list) async {
+    if (kIsWeb) return;
+    try {
+      final db = await _localDb.database;
+      for (final cat in list) {
+        final map = cat.toMap();
+        map['user_id'] = _activeUserId;
+        await db.insert('categories', map, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _cacheCredentialsLocally(List<CredentialEntity> list) async {
+    if (kIsWeb) return;
+    try {
+      final db = await _localDb.database;
+      final key = await _getKey();
+      for (final credential in list) {
+        final emailEnc = await _aesGcmService.encrypt(
+          plainText: credential.email,
+          keyBase64: key,
+        );
+        final passwordEnc = await _aesGcmService.encrypt(
+          plainText: credential.password,
+          keyBase64: key,
+        );
+        EncryptedData? labelEnc;
+        if (credential.label != null && credential.label!.isNotEmpty) {
+          labelEnc = await _aesGcmService.encrypt(
+            plainText: credential.label!,
+            keyBase64: key,
+          );
+        }
+        final row = {
+          'id': credential.id,
+          'user_id': _activeUserId,
+          'category_id': credential.categoryId,
+          'email_cipher': emailEnc.ciphertextBase64,
+          'email_nonce': emailEnc.nonceBase64,
+          'email_mac': emailEnc.macBase64,
+          'password_cipher': passwordEnc.ciphertextBase64,
+          'password_nonce': passwordEnc.nonceBase64,
+          'password_mac': passwordEnc.macBase64,
+          'label_cipher': labelEnc?.ciphertextBase64,
+          'label_nonce': labelEnc?.nonceBase64,
+          'label_mac': labelEnc?.macBase64,
+          'created_at': credential.createdAt.toIso8601String(),
+          'updated_at': credential.updatedAt.toIso8601String(),
+          'is_deleted': credential.isDeleted ? 1 : 0,
+        };
+        await db.insert('credentials', row, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    } catch (_) {}
   }
 }

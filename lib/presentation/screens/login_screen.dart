@@ -694,26 +694,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 8),
-
-                // Quick Local Vault Access (for immediate local testing)
-                Center(
-                  child: TextButton.icon(
-                    icon: const Icon(Icons.offline_bolt_outlined, size: 16, color: Color(0xFF726F68)),
-                    label: const Text(
-                      'Continue Offline / Local Testing',
-                      style: TextStyle(
-                        color: Color(0xFF726F68),
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    onPressed: () {
-                      ref.read(authNotifierProvider.notifier).continueOffline();
-                    },
-                  ),
-                ),
               ],
             ),
           ),

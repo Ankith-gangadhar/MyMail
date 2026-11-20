@@ -541,6 +541,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       child: Column(
                         children: [
                           ListTile(
+                            leading: const Icon(Icons.cloud_sync_rounded, color: Color(0xFFFF5225)),
+                            title: const Text('Cloud Vault Synchronization', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
+                            subtitle: Text(
+                              authState.isSignedIn
+                                  ? 'Active • Synced to $userEmail\nYour data restores automatically if you uninstall or switch phones.'
+                                  : 'Sign in to automatically sync and restore your vault across devices.',
+                              style: const TextStyle(color: Color(0xFF726F68), fontSize: 12),
+                            ),
+                            trailing: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: authState.isSignedIn ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                authState.isSignedIn ? 'Synced' : 'Local Only',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: authState.isSignedIn ? const Color(0xFF2E7D32) : const Color(0xFFE65100),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Divider(height: 1, color: Colors.black.withOpacity(0.06)),
+                          ListTile(
                             leading: const Icon(Icons.cloud_download_outlined, color: Color(0xFF191817)),
                             title: const Text('Create Encrypted Backup', style: TextStyle(color: Color(0xFF191817), fontWeight: FontWeight.w600)),
                             subtitle: const Text('Export all categories and accounts safely', style: TextStyle(color: Color(0xFF726F68), fontSize: 12)),
